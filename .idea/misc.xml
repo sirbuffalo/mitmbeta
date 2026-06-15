@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="sdkName" value="Python 3.14 (mitmbeta)" />
+  </component>
+  <component name="ProjectInspectionProfilesVisibleTreeState">
+    <entry key="Project Default">
+      <profile-state>
+        <expanded-state>
+          <State>
+            <id>AccessibilityHTML</id>
+          </State>
+          <State>
+            <id>Code style issuesJavaScript and TypeScript</id>
+          </State>
+          <State>
+            <id>ES2015 migration aidsJavaScript and TypeScript</id>
+          </State>
+          <State>
+            <id>General</id>
+          </State>
+          <State>
+            <id>GitHub actions</id>
+          </State>
+          <State>
+            <id>HTML</id>
+          </State>
+          <State>
+            <id>JavaScript and TypeScript</id>
+          </State>
+          <State>
+            <id>MySQL</id>
+          </State>
+          <State>
+            <id>Python</id>
+          </State>
+          <State>
+            <id>RegExp</id>
+          </State>
+          <State>
+            <id>SQL</id>
+          </State>
+          <State>
+            <id>Switch statement issuesJavaScript and TypeScript</id>
+          </State>
+          <State>
+            <id>TypeScriptJavaScript and TypeScript</id>
+          </State>
+          <State>
+            <id>XML</id>
+          </State>
+        </expanded-state>
+        <selected-state>
+          <State>
+            <id>User defined</id>
+          </State>
+        </selected-state>
+      </profile-state>
+    </entry>
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.14 (mitmbeta)" project-jdk-type="Python SDK" />
+  <component name="ProjectUserFactors">
+    <factor id="completionFinishedType">
+      <dailyData date="25-10-2024">
+        <observation name="cancelled" value="2.0" />
+      </dailyData>
+    </factor>
+    <factor id="completionType">
+      <dailyData date="25-10-2024">
+        <observation name="BASIC" value="1.0" />
+      </dailyData>
+    </factor>
+    <factor id="completionUsage">
+      <dailyData date="25-10-2024">
+        <observation name="count" value="2.0" />
+      </dailyData>
+    </factor>
+    <factor id="fullLineFactors" />
+    <factor id="itemPosition" />
+    <factor id="mnemonicsUsage" />
+    <factor id="prefixLength" />
+    <factor id="prefixMatchingType" />
+    <factor id="templatesUsage" />
+    <factor id="timeBetweenTyping" />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="827000" />
+  </component>
+</project>
