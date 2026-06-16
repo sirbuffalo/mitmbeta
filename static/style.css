@@ -1,0 +1,38 @@
+:root {
+    --top-bar-color: #2bcf4f;
+    --top-bar-text-color: #ffffff;
+    --site-font: "Montserrat", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--site-font);
+}
+
+.top-bar {
+    align-items: center;
+    background: var(--top-bar-color);
+    display: flex;
+    gap: 24px;
+    min-height: 56px;
+    padding: 0 24px;
+}
+
+.top-bar a {
+    color: var(--top-bar-text-color);
+    font-family: var(--site-font);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.top-bar a:hover {
+    text-decoration: underline;
+}
+
+.page-content {
+    padding: 24px;
+}

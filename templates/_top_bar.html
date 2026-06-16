@@ -1,0 +1,9 @@
+<nav class="top-bar" aria-label="Main navigation">
+    <a href="/">Home</a>
+    <a href="/about-us">About</a>
+    {% if session.get('user') %}
+        <a href="/account">Account</a>
+    {% else %}
+        <a href="/login">Login</a>
+    {% endif %}
+</nav>

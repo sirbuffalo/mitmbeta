@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account | MitM Beta Camp Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include '_top_bar.html' %}
+    <main class="page-content">
+        <h1>Your account</h1>
+
+        {% if user.picture %}
+            <img src="{{ user.picture }}" alt="" width="96" height="96">
+        {% endif %}
+
+        <dl>
+            <dt>Name</dt>
+            <dd>{{ user.name or 'Not provided' }}</dd>
+
+            <dt>Email</dt>
+            <dd>{{ user.email }}</dd>
+
+            <dt>User ID</dt>
+            <dd>{{ user.id }}</dd>
+
+            <dt>Google ID</dt>
+            <dd>{{ user.google_id }}</dd>
+        </dl>
+
+        <form method="post" action="/logout">
+            <button type="submit">Sign out</button>
+        </form>
+    </main>
+</body>
+</html>
