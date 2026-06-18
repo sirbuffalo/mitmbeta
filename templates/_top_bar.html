@@ -3,6 +3,7 @@
     <a href="/about-us">About</a>
     {% if session.get('user') %}
         <a href="/account">Account</a>
+        <a href="/courses/home">Courses</a>
     {% else %}
         <a href="/login">Login</a>
     {% endif %}

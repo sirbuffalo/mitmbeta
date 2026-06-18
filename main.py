@@ -19,6 +19,81 @@ GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo'
 GOOGLE_SCOPES = 'openid email profile'
 
+COURSES = {
+
+    'home':{
+       'courses' :    [],
+        'links' :   []
+    },
+
+    'Algebra and Calculus A':
+    
+    {
+
+    'nodes' : [
+   {"id":"Minimization"},
+   {"id":"Differentiation"},
+   {"id":"Solving\nFor 0s"},
+   {"id":"Solving\nLinear\nEquations"},
+   {"id":"Solving\nQuadratic\nEquations"},
+   {"id":"Power\nRule"},
+   {"id":"Product\nRule"},
+   {"id":"Quotient\nRule"},
+   {"id":"Chain\nRule"}
+   ],
+
+
+    'edges' : [
+   ["Minimization", "Differentiation"],
+   ["Minimization", "Solving\nFor 0s"],
+   ["Product\nRule", "Power\nRule"],
+   ["Quotient\nRule", "Product\nRule"],
+   ["Chain\nRule", "Product\nRule"],
+   ["Differentiation", "Chain\nRule"],
+   ["Differentiation", "Power\nRule"],
+   ["Differentiation", "Quotient\nRule"],
+   ["Solving\nFor 0s", "Solving\nLinear\nEquations"],
+   ["Solving\nQuadratic\nEquations", "Solving\nLinear\nEquations"],
+   ["Solving\nFor 0s", "Solving\nQuadratic\nEquations"]
+    ]
+    },
+
+    'Combinatorics': 
+    {
+  "nodes": [
+    {"id": "Basic\nArithmetic"},
+    {"id": "Factorials"},
+    {"id": "Permutations"},
+    {"id": "Combinations"},
+    {"id": "Choose"},
+    {"id": "Overcounting"},
+    {"id": "Complementary\nCounting"},
+    {"id": "Counting\nStrategies"},
+   {"id":"Jumping\nProblem"}
+  ],
+
+  "edges": [
+    ["Factorials", "Basic\nArithmetic"],
+
+    ["Permutations", "Factorials"],
+    ["Combinations", "Factorials"],
+
+    ["Choose", "Combinations"],
+
+    ["Counting\nStrategies", "Basic\nArithmetic"],
+    ["Counting\nStrategies", "Factorials"],
+
+    ["Overcounting", "Permutations"],
+    ["Overcounting", "Combinations"],
+
+    ["Complementary\nCounting", "Counting\nStrategies"],
+   ["Jumping\nProblem", "Complementary\nCounting"],
+   ["Jumping\nProblem", "Choose"]
+  ]
+}
+
+}
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -186,6 +261,15 @@ def google_callback():
 def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
+
+@app.get('/courses/<course>')
+def courses(course):
+    if course != 'home':
+        return render_template('course1.html', user=session.get('user'), course_name = course, courses = COURSES[course])
+    else:
+        return render_template('courses.html', user=session.get('user'))
+
+
 
 
 if __name__ == '__main__':
