@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videos | MitM Beta Camp Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include '_top_bar.html' %}
+    <main class="videos-page">
+        <h1>Videos</h1>
+        <div id="video-tree" class="video-tree">
+            <svg id="video-tree-lines" class="video-tree-lines" aria-hidden="true"></svg>
+            {% for layer in layers %}
+                <section class="video-tree-layer" aria-label="Layer {{ layer.index }}">
+                    {% for video in layer.videos %}
+                        <article
+                            class="video-node{% if video.finished %} is-finished{% endif %}"
+                            data-video-id="{{ video.id }}"
+                            data-dependencies="{{ video.dependency_ids | join(',') }}"
+                            data-progress-url="{{ url_for('save_video_progress', video_id=video.id) }}">
+                            <a class="video-node-title" href="{{ url_for('video', video_id=video.id) }}">{{ video.title }}</a>
+                            <label class="video-node-finished">
+                                <input type="checkbox" {% if video.finished %}checked{% endif %}>
+                                <span class="video-node-check" aria-hidden="true"></span>
+                                <span>Finished</span>
+                            </label>
+                        </article>
+                    {% endfor %}
+                </section>
+            {% endfor %}
+        </div>
+    </main>
+    <script src="/static/videos.js"></script>
+</body>
+</html>
