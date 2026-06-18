@@ -22,6 +22,7 @@ GOOGLE_SCOPES = 'openid email profile'
 COURSES = {
 
     'home':{
+        'question' : '',
        'courses' :    [],
         'links' :   []
     },
@@ -29,6 +30,8 @@ COURSES = {
     'Algebra and Calculus A':
     
     {
+
+        "question" : "How can we find the minimum of a function?",
 
     'nodes' : [
    {"id":"Minimization"},
@@ -52,6 +55,7 @@ COURSES = {
    ["Differentiation", "Chain\nRule"],
    ["Differentiation", "Power\nRule"],
    ["Differentiation", "Quotient\nRule"],
+   ["Differentiation", "Product\nRule"],
    ["Solving\nFor 0s", "Solving\nLinear\nEquations"],
    ["Solving\nQuadratic\nEquations", "Solving\nLinear\nEquations"],
    ["Solving\nFor 0s", "Solving\nQuadratic\nEquations"]
@@ -60,6 +64,10 @@ COURSES = {
 
     'Combinatorics': 
     {
+
+    "question": "Suppose we have 13 people in a line randomly jump either left or right. What is the probability that the teams will differ by at least 2 people?",
+
+
   "nodes": [
     {"id": "Basic\nArithmetic"},
     {"id": "Factorials"},
@@ -68,7 +76,7 @@ COURSES = {
     {"id": "Choose"},
     {"id": "Overcounting"},
     {"id": "Complementary\nCounting"},
-    {"id": "Counting\nStrategies"},
+    {"id": "Probability"},
    {"id":"Jumping\nProblem"}
   ],
 
@@ -80,13 +88,12 @@ COURSES = {
 
     ["Choose", "Combinations"],
 
-    ["Counting\nStrategies", "Basic\nArithmetic"],
-    ["Counting\nStrategies", "Factorials"],
+    ["Probability", "Basic\nArithmetic"],
 
     ["Overcounting", "Permutations"],
     ["Overcounting", "Combinations"],
 
-    ["Complementary\nCounting", "Counting\nStrategies"],
+    ["Complementary\nCounting", "Probability"],
    ["Jumping\nProblem", "Complementary\nCounting"],
    ["Jumping\nProblem", "Choose"]
   ]
@@ -264,6 +271,12 @@ def logout():
 
 @app.get('/courses/<course>')
 def courses(course):
+
+
+    user = session.get('user')
+    if user is None:
+        return redirect(url_for('login'))
+
     if course != 'home':
         return render_template('course1.html', user=session.get('user'), course_name = course, courses = COURSES[course])
     else:

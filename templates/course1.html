@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Directed Graph Visualization</title>
+<title>Courses | {{ course_name }} | MitM Beta Camp Project</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,6 +44,18 @@ h1 {
     border-radius: 8px;
     color: #222;
 }
+
+h3 {
+    position: absolute;
+    top: 75px;
+    left: 20px;
+    margin: 0;
+    background: rgba(255,255,255,0.85);
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: #222;
+    width: 25vw;
+}
 </style>
 </head>
 
@@ -56,6 +68,7 @@ h1 {
 <main class="page-content">
 {% if course_name != 'home' %}
     <h1>{{course_name}} Courses</h1>
+    <h3>{{courses["question"]}}</h3>
 {% else %}
     <h1>Courses Home</h1>
 {% endif %}
@@ -293,53 +306,110 @@ function render() {
 
     for (const n of nodes) {
 
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "#4a90e2";
-        ctx.fill();
+        const displayRadius =
+    (n === hovered)
+    ? n.radius * 1.15
+    : n.radius;
 
-        ctx.strokeStyle = "#222";
-        ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(
+        n.x,
+        n.y,
+        displayRadius,
+        0,
+        Math.PI * 2
+    );
 
-        ctx.fillStyle = "white";
-        drawNodeText(n.id, n.x, n.y);
+ctx.fillStyle =
+    (n === hovered)
+    ? "#5da6ff"
+    : "#4a90e2";
+
+ctx.fill();
+
+ctx.strokeStyle = "#222";
+ctx.lineWidth = (n === hovered) ? 3 : 2;
+ctx.stroke();
+
+ctx.fillStyle = "white";
+drawNodeText(n.id, n.x, n.y);
     }
 }
 
 //////////////////////////////////////////////////////
-// DRAGGING
+// DRAGGING + HOVER
 //////////////////////////////////////////////////////
 
 let dragged = null;
+let hovered = null;
 
 function getNode(mx, my) {
     for (const n of nodes) {
+
+        const radius =
+            (n === hovered)
+            ? n.radius * 1.15
+            : n.radius;
+
         const dx = mx - n.x;
         const dy = my - n.y;
-        if (dx*dx + dy*dy < n.radius*n.radius) {
+
+        if (dx * dx + dy * dy < radius * radius) {
             return n;
         }
     }
+
     return null;
 }
 
+let timeStamp = Date.now();
+
 canvas.addEventListener("mousedown", e => {
+
     const n = getNode(e.clientX, e.clientY);
+    timeStamp = Date.now();
+
     if (n) {
         dragged = n;
         n.dragging = true;
     }
 });
 
+
 canvas.addEventListener("mousemove", e => {
+
+    const mx = e.clientX;
+    const my = e.clientY;
+
+
+    hovered = getNode(mx, my);
+
+    // change mouse cursor when hovering a node
+    if (hovered) {
+        canvas.style.cursor = "grab";
+    } else {
+        canvas.style.cursor = "default";
+    }
+
     if (dragged) {
-        dragged.x = e.clientX;
-        dragged.y = e.clientY;
+        dragged.x = mx;
+        dragged.y = my;
     }
 });
 
 window.addEventListener("mouseup", () => {
-    if (dragged) dragged.dragging = false;
+
+
+    if (dragged) {
+
+        console.log(Date.now()-timeStamp);
+        if (Date.now() - timeStamp < 150) {
+            window.location.replace("/");
+        }
+        
+        dragged.dragging = false;
+    }
+
     dragged = null;
 });
 
