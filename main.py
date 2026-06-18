@@ -1299,6 +1299,11 @@ def logout():
     return redirect(url_for('login'))
 
 
+@app.get('/contact-us')
+def contact_us():
+    return render_template('contact_us.html')
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'video-build-order':
         requested_video_ids = sys.argv[2:] or None

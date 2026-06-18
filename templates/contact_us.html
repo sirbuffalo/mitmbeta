@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MitM Beta Camp Project</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: #f4f7fb;
+            color: #333;
+        }
+
+        .feedback-container {
+            max-width: 650px;
+            margin: 60px auto;
+            padding: 35px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .rating-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .rating-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border: 1px solid #dbe3ec;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            accent-color: #2bcf4f;
+        }
+
+        .rating-option:hover {
+            background: #e8f0ff;
+            border-color: #2bcf4f;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #dbe3ec;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2bcf4f;
+            box-shadow: 0 0 0 3px rgba(79,140,255,0.15);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #2bcf4f;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #2bcf4f;
+        }
+    </style>
+</head>
+
+<body>
+    {% include '_top_bar.html' %}
+
+    <div class="feedback-container">
+        <h1>Feedback</h1>
+        <p class="subtitle">
+            We'd love to hear your thoughts about the site.
+        </p>
+
+        <form>
+            <div class="form-group">
+                <label>
+                    Please rate your experience on this site
+                    (1 = Lowest, 5 = Greatest)
+                </label>
+
+                <div class="rating-group">
+                    <label class="rating-option">
+                        <input type="radio" name="rating" value="1">
+                        1
+                    </label>
+
+                    <label class="rating-option">
+                        <input type="radio" name="rating" value="2">
+                        2
+                    </label>
+
+                    <label class="rating-option">
+                        <input type="radio" name="rating" value="3">
+                        3
+                    </label>
+
+                    <label class="rating-option">
+                        <input type="radio" name="rating" value="4">
+                        4
+                    </label>
+
+                    <label class="rating-option">
+                        <input type="radio" name="rating" value="5">
+                        5
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="comments">
+                    Any comments, questions, or suggestions?
+                </label>
+
+                <textarea
+                    id="comments"
+                    name="comments"
+                    placeholder="Share your feedback here..."
+                ></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Submit Feedback
+            </button>
+        </form>
+    </div>
+</body>
+</html>
