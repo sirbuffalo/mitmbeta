@@ -12,60 +12,88 @@
 </head>
 <body>
     {% include '_top_bar.html' %}
-    <main class="video-page">
-        <div class="video-frame">
-            <video
-                id="lesson-video"
-                autoplay
-                preload="metadata"
-                data-main-title="{{ title }}"
-                data-main-src="{{ video_url }}"
-                data-start-time="{{ saved_seconds }}"
-                data-progress-url="{{ progress_url }}"
-                data-finished-videos='{{ finished_video_ids | tojson }}'
-                data-interjections='{{ interjections | tojson }}'
-                data-quality-sources='{{ quality_sources | tojson }}'>
-                Your browser does not support the video tag.
-            </video>
-            <div id="video-controls" class="video-controls">
-                <button id="video-play-toggle" class="video-control-button" type="button" aria-label="Play or pause">
-                    <span class="material-symbols-rounded" aria-hidden="true">pause</span>
-                </button>
-                <label class="video-scrubber-label" for="video-scrubber">
-                    <span id="video-current-time">0:00</span>
-                    <span id="video-timeline" class="video-timeline">
-                        <span id="video-interjection-markers" class="video-interjection-markers"></span>
-                        <span id="video-progress" class="video-progress"></span>
-                        <span id="video-playhead" class="video-playhead"></span>
-                        <input id="video-scrubber" class="video-scrubber" type="range" min="0" max="100" value="0" step="0.01">
-                    </span>
-                    <span id="video-duration">0:00</span>
-                </label>
-                <div id="video-volume-control" class="video-volume-control">
-                    <button id="video-volume-toggle" class="video-control-button" type="button" aria-label="Volume">
-                        <span class="material-symbols-rounded" aria-hidden="true">volume_up</span>
+    <div id="video-fullscreen-shell" class="video-fullscreen-shell">
+        <main class="video-page">
+            <div class="video-frame">
+                <video
+                    id="lesson-video"
+                    autoplay
+                    preload="metadata"
+                    data-main-title="{{ title }}"
+                    data-main-src="{{ video_url }}"
+                    data-start-time="{{ saved_seconds }}"
+                    data-progress-url="{{ progress_url }}"
+                    data-finished-videos='{{ finished_video_ids | tojson }}'
+                    data-interjections='{{ interjections | tojson }}'
+                    data-quality-sources='{{ quality_sources | tojson }}'>
+                    Your browser does not support the video tag.
+                </video>
+                <div id="video-controls" class="video-controls">
+                    <button id="video-play-toggle" class="video-control-button" type="button" aria-label="Play or pause">
+                        <span class="material-symbols-rounded" aria-hidden="true">pause</span>
                     </button>
-                    <div id="video-volume-popout" class="video-volume-popout">
-                        <input id="video-volume" class="video-volume" type="range" min="0" max="1" value="1" step="0.01" aria-label="Volume">
+                    <label class="video-scrubber-label" for="video-scrubber">
+                        <span id="video-current-time">0:00</span>
+                        <span id="video-timeline" class="video-timeline">
+                            <span id="video-interjection-markers" class="video-interjection-markers"></span>
+                            <span id="video-progress" class="video-progress"></span>
+                            <span id="video-playhead" class="video-playhead"></span>
+                            <input id="video-scrubber" class="video-scrubber" type="range" min="0" max="100" value="0" step="0.01">
+                        </span>
+                        <span id="video-duration">0:00</span>
+                    </label>
+                    <div id="video-settings-control" class="video-settings-control">
+                        <button id="video-settings-toggle" class="video-control-button video-settings-toggle" type="button" aria-label="Settings">
+                            <span class="material-symbols-rounded" aria-hidden="true">settings</span>
+                        </button>
+                        <div id="video-secondary-controls" class="video-secondary-controls">
+                            <label class="video-quality-control" for="video-quality">
+                                <select id="video-quality" class="video-quality" aria-label="Video quality">
+                                    {% for source in quality_sources %}
+                                        <option value="{{ source.quality }}" {% if source.quality == selected_quality %}selected{% endif %}>{{ source.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <div id="video-speed-control" class="video-speed-control">
+                                <select id="video-speed" class="video-speed" aria-label="Playback speed">
+                                    <option value="0.5">0.5x</option>
+                                    <option value="0.75">0.75x</option>
+                                    <option value="1" selected>1x</option>
+                                    <option value="1.25">1.25x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="1.75">1.75x</option>
+                                    <option value="2">2x</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                                <label id="video-custom-speed-control" class="video-custom-speed-control" for="video-custom-speed" hidden>
+                                    <span id="video-custom-speed-label">1x</span>
+                                    <input id="video-custom-speed" class="video-custom-speed" type="range" min="0" max="100" value="65.05" step="0.1" aria-label="Custom playback speed">
+                                </label>
+                            </div>
+                            <div id="video-volume-control" class="video-volume-control">
+                                <button id="video-volume-toggle" class="video-control-button" type="button" aria-label="Volume">
+                                    <span class="material-symbols-rounded" aria-hidden="true">volume_up</span>
+                                </button>
+                                <div id="video-volume-popout" class="video-volume-popout">
+                                    <input id="video-volume" class="video-volume" type="range" min="0" max="1" value="1" step="0.01" aria-label="Volume">
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    <button id="video-fullscreen-toggle" class="video-control-button" type="button" aria-label="Fullscreen">
+                        <span class="material-symbols-rounded" aria-hidden="true">fullscreen</span>
+                    </button>
                 </div>
-                <label class="video-quality-control" for="video-quality">
-                    <select id="video-quality" class="video-quality" aria-label="Video quality">
-                        {% for source in quality_sources %}
-                            <option value="{{ source.quality }}" {% if source.quality == selected_quality %}selected{% endif %}>{{ source.label }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
             </div>
-        </div>
-    </main>
-    <footer class="video-title-bar">
-        <div></div>
-        <h1 id="video-title">{{ title }}</h1>
-        <button id="skip-interjection" class="skip-interjection" type="button" hidden>
-            Skip
-        </button>
-    </footer>
+        </main>
+        <footer class="video-title-bar">
+            <div></div>
+            <h1 id="video-title">{{ title }}</h1>
+            <button id="skip-interjection" class="skip-interjection" type="button" hidden>
+                Skip
+            </button>
+        </footer>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
     <script src="/static/video.js?v={{ video_js_version }}"></script>
 </body>

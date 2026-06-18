@@ -1,5 +1,6 @@
 (function () {
     const video = document.getElementById('lesson-video');
+    const fullscreenShell = document.getElementById('video-fullscreen-shell');
     const videoFrame = video.closest('.video-frame');
     const title = document.getElementById('video-title');
     const controls = document.getElementById('video-controls');
@@ -13,10 +14,17 @@
     const volumeControl = document.getElementById('video-volume-control');
     const volumeToggle = document.getElementById('video-volume-toggle');
     const volume = document.getElementById('video-volume');
+    const settingsControl = document.getElementById('video-settings-control');
+    const settingsToggle = document.getElementById('video-settings-toggle');
     const qualitySelect = document.getElementById('video-quality');
+    const speedSelect = document.getElementById('video-speed');
+    const customSpeedControl = document.getElementById('video-custom-speed-control');
+    const customSpeed = document.getElementById('video-custom-speed');
+    const customSpeedLabel = document.getElementById('video-custom-speed-label');
+    const fullscreenToggle = document.getElementById('video-fullscreen-toggle');
     const skipInterjection = document.getElementById('skip-interjection');
 
-    if (!video || !videoFrame || !title || !controls || !playToggle || !scrubber || !interjectionMarkers || !videoProgress || !videoPlayhead || !currentTime || !duration || !volumeControl || !volumeToggle || !volume || !qualitySelect || !skipInterjection) {
+    if (!video || !fullscreenShell || !videoFrame || !title || !controls || !playToggle || !scrubber || !interjectionMarkers || !videoProgress || !videoPlayhead || !currentTime || !duration || !volumeControl || !volumeToggle || !volume || !settingsControl || !settingsToggle || !qualitySelect || !speedSelect || !customSpeedControl || !customSpeed || !customSpeedLabel || !fullscreenToggle || !skipInterjection) {
         return;
     }
 
@@ -37,6 +45,7 @@
     let lastProgressSaveTime = 0;
     let lastSavedVideoSecond = savedStartTime;
     let lastPlaybackTime = savedStartTime;
+    let selectedPresetSpeed = 1;
     let scrubbing = false;
 
     function formatTime(seconds) {
@@ -84,6 +93,12 @@
         }
 
         volumeToggle.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">${icon}</span>`;
+    }
+
+    function updateFullscreenToggle() {
+        const isFullscreen = document.fullscreenElement === fullscreenShell;
+        fullscreenToggle.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">${isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>`;
+        fullscreenToggle.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Fullscreen');
     }
 
     function updateTitleAndSkip() {
@@ -178,6 +193,7 @@
         if (!video.paused && !volumeControl.classList.contains('is-open')) {
             controlsHideTimer = setTimeout(() => {
                 controls.classList.remove('is-visible');
+                settingsControl.classList.remove('is-open');
             }, 1800);
         }
     }
@@ -196,6 +212,53 @@
         if (playPromise) {
             playPromise.catch(() => {});
         }
+    }
+
+    function formatSpeed(rate) {
+        if (rate === 0) {
+            return '0x';
+        }
+
+        return `${Number(rate.toFixed(2))}x`;
+    }
+
+    function speedFromSliderValue(value) {
+        const sliderValue = Math.max(Math.min(Number(value), 100), 0);
+        if (sliderValue === 0) {
+            return 0;
+        }
+
+        const minRate = 0.05;
+        return minRate * ((5 / minRate) ** (sliderValue / 100));
+    }
+
+    function sliderValueFromSpeed(rate) {
+        const playbackRate = Math.max(Math.min(Number(rate), 5), 0);
+        if (playbackRate === 0) {
+            return 0;
+        }
+
+        const minRate = 0.05;
+        return (Math.log(playbackRate / minRate) / Math.log(5 / minRate)) * 100;
+    }
+
+    function setPlaybackSpeed(rate) {
+        const playbackRate = Math.max(Math.min(Number(rate), 5), 0);
+        if (playbackRate === 0) {
+            video.pause();
+        } else {
+            video.playbackRate = playbackRate;
+        }
+        customSpeedLabel.textContent = formatSpeed(playbackRate);
+    }
+
+    function updateCustomSpeed() {
+        setPlaybackSpeed(speedFromSliderValue(customSpeed.value));
+    }
+
+    function setCustomSpeedFromRate(rate) {
+        customSpeed.value = String(sliderValueFromSpeed(rate));
+        setPlaybackSpeed(speedFromSliderValue(customSpeed.value));
     }
 
     function saveProgress(force = false) {
@@ -295,6 +358,15 @@
 
     function seekBy(seconds) {
         seekTo((video.currentTime || 0) + seconds);
+    }
+
+    function skipCurrentInterjection() {
+        const interjectionRange = getCurrentInterjectionRange();
+        if (!interjectionRange || !Number.isFinite(interjectionRange.skip_end)) {
+            return;
+        }
+
+        seekTo(interjectionRange.skip_end);
     }
 
     function unloadCurrentSource() {
@@ -437,6 +509,7 @@
             controls.classList.remove('is-visible');
         }
         volumeControl.classList.remove('is-open');
+        settingsControl.classList.remove('is-open');
     });
 
     controls.addEventListener('click', (event) => {
@@ -491,8 +564,45 @@
         event.stopPropagation();
     });
 
+    settingsToggle.addEventListener('click', () => {
+        settingsControl.classList.toggle('is-open');
+        showControls();
+    });
+
+    settingsControl.addEventListener('click', (event) => {
+        event.stopPropagation();
+    });
+
+    fullscreenToggle.addEventListener('click', () => {
+        if (document.fullscreenElement === fullscreenShell) {
+            document.exitFullscreen?.();
+        } else {
+            fullscreenShell.requestFullscreen?.();
+        }
+        showControls();
+    });
+
     qualitySelect.addEventListener('change', () => {
         changeQuality(qualitySelect.value);
+        showControls();
+    });
+
+    speedSelect.addEventListener('change', () => {
+        const isCustom = speedSelect.value === 'custom';
+        customSpeedControl.hidden = !isCustom;
+        if (isCustom) {
+            setCustomSpeedFromRate(selectedPresetSpeed);
+        } else {
+            selectedPresetSpeed = Number(speedSelect.value);
+            setPlaybackSpeed(speedSelect.value);
+        }
+        showControls();
+    });
+
+    customSpeed.addEventListener('input', () => {
+        speedSelect.value = 'custom';
+        customSpeedControl.hidden = false;
+        updateCustomSpeed();
         showControls();
     });
 
@@ -519,15 +629,15 @@
             event.preventDefault();
             seekBy(5);
         }
+
+        if (event.code === 'Enter') {
+            event.preventDefault();
+            skipCurrentInterjection();
+        }
     });
 
     skipInterjection.addEventListener('click', () => {
-        const interjectionRange = getCurrentInterjectionRange();
-        if (!interjectionRange || !Number.isFinite(interjectionRange.skip_end)) {
-            return;
-        }
-
-        seekTo(interjectionRange.skip_end);
+        skipCurrentInterjection();
     });
 
     video.addEventListener('loadedmetadata', updateTimeline);
@@ -555,11 +665,17 @@
         updateVolumeIcon();
     });
     video.addEventListener('ended', () => saveProgress(true));
+    document.addEventListener('fullscreenchange', () => {
+        updateFullscreenToggle();
+        updateTimeline();
+    });
     window.addEventListener('pagehide', () => saveProgress(true));
 
     updatePlayToggle();
+    updateFullscreenToggle();
     video.volume = 1;
     video.muted = false;
+    setPlaybackSpeed(1);
     volume.value = '1';
     updateVolumeIcon();
     updateTimeline();

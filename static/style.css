@@ -169,6 +169,31 @@ body {
     width: 100%;
 }
 
+.video-fullscreen-shell:fullscreen {
+    background: #000000;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) var(--video-title-bar-height);
+    height: 100vh;
+    width: 100vw;
+}
+
+.video-fullscreen-shell:fullscreen .video-page {
+    background: #000000;
+    height: calc(100vh - var(--video-title-bar-height));
+    justify-items: center;
+    align-items: end;
+}
+
+.video-fullscreen-shell:fullscreen .video-frame {
+    height: min(100%, 56.25vw);
+    width: min(100vw, calc(100% * 16 / 9));
+}
+
+.video-fullscreen-shell:fullscreen .video-title-bar {
+    justify-self: center;
+    width: min(100vw, calc((100vh - var(--video-title-bar-height)) * 16 / 9));
+}
+
 .video-frame {
     aspect-ratio: 16 / 9;
     height: min(calc(100vh - var(--video-title-bar-height) - 56px), 56.25vw);
@@ -243,7 +268,7 @@ body {
     color: #ffffff;
     display: grid;
     gap: 14px;
-    grid-template-columns: auto minmax(180px, 1fr) auto auto;
+    grid-template-columns: auto minmax(180px, 1fr) auto auto auto;
     left: 0;
     opacity: 0;
     padding: 14px;
@@ -426,13 +451,41 @@ body {
     position: relative;
 }
 
-.video-quality-control {
+.video-settings-control {
+    align-items: center;
+    display: inline-flex;
+    position: relative;
+}
+
+.video-settings-toggle {
+    display: none;
+}
+
+.video-secondary-controls {
+    align-items: center;
+    display: inline-flex;
+    gap: 14px;
+}
+
+.video-volume-control.is-open .video-control-button {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 0 0 50% 50%;
+    border-top-color: transparent;
+}
+
+.video-quality-control,
+.video-speed-control {
     align-items: center;
     display: inline-flex;
     gap: 6px;
 }
 
-.video-quality {
+.video-speed-control {
+    position: relative;
+}
+
+.video-quality,
+.video-speed {
     background: rgba(255, 255, 255, 0.18);
     border: 1px solid rgba(255, 255, 255, 0.65);
     border-radius: 6px;
@@ -444,23 +497,54 @@ body {
     padding: 0 8px;
 }
 
-.video-quality option {
+.video-quality option,
+.video-speed option {
     color: #000000;
+}
+
+.video-custom-speed-control {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 6px;
+    bottom: 46px;
+    color: #ffffff;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 42px 140px;
+    padding: 8px;
+    position: absolute;
+    right: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.video-custom-speed-control[hidden] {
+    display: none;
+}
+
+.video-custom-speed {
+    accent-color: #ffffff;
+    background: transparent;
 }
 
 .video-volume-popout {
     align-items: center;
-    bottom: 48px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+    bottom: 40px;
     display: flex;
     height: 150px;
     justify-content: center;
     opacity: 0;
-    padding: 12px;
+    padding: 12px 0;
     pointer-events: none;
     position: absolute;
     right: 50%;
     transform: translate(50%, 8px);
     transition: opacity 180ms ease, transform 180ms ease;
+    width: 40px;
 }
 
 .video-volume-control.is-open .video-volume-popout {
@@ -500,13 +584,48 @@ body {
     min-width: 42px;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
     .video-controls {
-        grid-template-columns: auto 1fr;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         padding: 12px;
     }
 
+    .video-settings-toggle {
+        display: inline-flex;
+    }
+
+    .video-secondary-controls {
+        align-items: stretch;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        border-radius: 6px;
+        bottom: 50px;
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+        position: absolute;
+        right: 0;
+        width: max-content;
+    }
+
+    .video-settings-control.is-open .video-secondary-controls {
+        display: flex;
+    }
+
+    .video-quality,
+    .video-speed {
+        width: 100%;
+    }
+
+    .video-custom-speed-control {
+        bottom: auto;
+        grid-template-columns: 42px 120px;
+        margin-top: 8px;
+        position: static;
+    }
+
     .video-volume-control {
-        grid-column: 1 / -1;
+        align-self: flex-end;
     }
 }
