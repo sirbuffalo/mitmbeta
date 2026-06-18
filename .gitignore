@@ -1,3 +1,6 @@
 __pycache__/
 *.py[cod]
 instance/*.db
+instance/merged_videos/
+instance/hls_videos/
+instance/base_videos/

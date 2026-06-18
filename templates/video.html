@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | MitM Beta Camp Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@1" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include '_top_bar.html' %}
+    <main class="video-page">
+        <div class="video-frame">
+            <video
+                id="lesson-video"
+                autoplay
+                preload="metadata"
+                data-main-title="{{ title }}"
+                data-main-src="{{ video_url }}"
+                data-start-time="{{ saved_seconds }}"
+                data-progress-url="{{ progress_url }}"
+                data-finished-videos='{{ finished_video_ids | tojson }}'
+                data-interjections='{{ interjections | tojson }}'
+                data-quality-sources='{{ quality_sources | tojson }}'>
+                Your browser does not support the video tag.
+            </video>
+            <div id="video-controls" class="video-controls">
+                <button id="video-play-toggle" class="video-control-button" type="button" aria-label="Play or pause">
+                    <span class="material-symbols-rounded" aria-hidden="true">pause</span>
+                </button>
+                <label class="video-scrubber-label" for="video-scrubber">
+                    <span id="video-current-time">0:00</span>
+                    <span id="video-timeline" class="video-timeline">
+                        <span id="video-interjection-markers" class="video-interjection-markers"></span>
+                        <span id="video-progress" class="video-progress"></span>
+                        <span id="video-playhead" class="video-playhead"></span>
+                        <input id="video-scrubber" class="video-scrubber" type="range" min="0" max="100" value="0" step="0.01">
+                    </span>
+                    <span id="video-duration">0:00</span>
+                </label>
+                <div id="video-volume-control" class="video-volume-control">
+                    <button id="video-volume-toggle" class="video-control-button" type="button" aria-label="Volume">
+                        <span class="material-symbols-rounded" aria-hidden="true">volume_up</span>
+                    </button>
+                    <div id="video-volume-popout" class="video-volume-popout">
+                        <input id="video-volume" class="video-volume" type="range" min="0" max="1" value="1" step="0.01" aria-label="Volume">
+                    </div>
+                </div>
+                <label class="video-quality-control" for="video-quality">
+                    <select id="video-quality" class="video-quality" aria-label="Video quality">
+                        {% for source in quality_sources %}
+                            <option value="{{ source.quality }}" {% if source.quality == selected_quality %}selected{% endif %}>{{ source.label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+        </div>
+    </main>
+    <footer class="video-title-bar">
+        <div></div>
+        <h1 id="video-title">{{ title }}</h1>
+        <button id="skip-interjection" class="skip-interjection" type="button" hidden>
+            Skip
+        </button>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script src="/static/video.js?v={{ video_js_version }}"></script>
+</body>
+</html>
