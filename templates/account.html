@@ -11,30 +11,40 @@
 </head>
 <body>
     {% include '_top_bar.html' %}
-    <main class="page-content">
-        <h1>Your account</h1>
+    <main class="account-page">
+        <section class="account-panel">
+            <div class="account-profile">
+                {% if user.picture %}
+                    <img class="account-avatar" src="{{ user.picture }}" alt="">
+                {% else %}
+                    <div class="account-avatar account-avatar-fallback" aria-hidden="true">
+                        {{ (user.name or user.email or 'U')[:1] }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h1>{{ user.name or 'Your account' }}</h1>
+                    <p>{{ user.email }}</p>
+                </div>
+            </div>
 
-        {% if user.picture %}
-            <img src="{{ user.picture }}" alt="" width="96" height="96">
-        {% endif %}
+            <div class="account-details">
+                <div>
+                    <span class="account-label">Signed in with</span>
+                    <strong>Google</strong>
+                </div>
+                <div>
+                    <span class="account-label">Profile name</span>
+                    <strong>{{ user.name or 'Not provided' }}</strong>
+                </div>
+            </div>
 
-        <dl>
-            <dt>Name</dt>
-            <dd>{{ user.name or 'Not provided' }}</dd>
-
-            <dt>Email</dt>
-            <dd>{{ user.email }}</dd>
-
-            <dt>User ID</dt>
-            <dd>{{ user.id }}</dd>
-
-            <dt>Google ID</dt>
-            <dd>{{ user.google_id }}</dd>
-        </dl>
-
-        <form method="post" action="/logout">
-            <button type="submit">Sign out</button>
-        </form>
+            <div class="account-actions">
+                <a class="account-button account-button-primary" href="/videos">Go to videos</a>
+                <form method="post" action="/logout">
+                    <button class="account-button" type="submit">Sign out</button>
+                </form>
+            </div>
+        </section>
     </main>
 </body>
 </html>

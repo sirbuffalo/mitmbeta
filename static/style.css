@@ -38,6 +38,106 @@ body {
     padding: 24px;
 }
 
+.account-page {
+    align-items: start;
+    background: #ffffff;
+    display: grid;
+    min-height: calc(100vh - 56px);
+    padding: 32px;
+}
+
+.account-panel {
+    border: 2px solid #2bcf4f;
+    border-radius: 8px;
+    max-width: 720px;
+    padding: 24px;
+    width: 100%;
+}
+
+.account-profile {
+    align-items: center;
+    display: flex;
+    gap: 18px;
+}
+
+.account-avatar {
+    border: 3px solid #2bcf4f;
+    border-radius: 50%;
+    height: 88px;
+    object-fit: cover;
+    width: 88px;
+}
+
+.account-avatar-fallback {
+    align-items: center;
+    background: #c8f2d2;
+    display: flex;
+    font-size: 36px;
+    font-weight: 700;
+    justify-content: center;
+}
+
+.account-profile h1 {
+    font-size: 28px;
+    margin: 0;
+}
+
+.account-profile p {
+    color: #444444;
+    margin: 6px 0 0;
+}
+
+.account-details {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin-top: 28px;
+}
+
+.account-details > div {
+    background: #f6f6f6;
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.account-label {
+    color: #555555;
+    display: block;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.account-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.account-actions form {
+    margin: 0;
+}
+
+.account-button {
+    background: #ffffff;
+    border: 2px solid #2bcf4f;
+    border-radius: 8px;
+    color: #000000;
+    cursor: pointer;
+    display: inline-flex;
+    font-family: var(--site-font);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 10px 14px;
+    text-decoration: none;
+}
+
+.account-button-primary {
+    background: #2bcf4f;
+    color: #ffffff;
+}
+
 .videos-page {
     background: #ffffff;
     min-height: calc(100vh - 56px);
