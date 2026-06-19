@@ -1396,46 +1396,6 @@ def courses(course):
         return render_template('courses.html', user=session.get('user'))
 
 
-@app.get('/contact-us')
-def contact_us():
-    return render_template('contact_us.html')
-
-@app.get('/feedback')
-def do_feedback():
-    rating = request.args.get('rating')
-    comments = request.args.get('comments')
-
-
-    # 1. Define credentials and addresses
-    SMTP_SERVER = "smtp.gmail.com"  # Replace with your provider's SMTP server
-    SMTP_PORT = 587
-    SENDER_EMAIL = "info.project1716@gmail.com"
-    SENDER_PASSWORD = "wnmbuqjxwngzrgec"  # Do not use your main login password!
-    RECEIVER_EMAIL = "info.project1716@gmail.com"
-
-    # 2. Construct the email message
-    msg = EmailMessage()
-    msg["Subject"] = f"Review from {session.get('user', {}).get('name', 'Unknown')}"
-    msg["From"] = SENDER_EMAIL
-    msg["To"] = RECEIVER_EMAIL
-    msg.set_content(f"Rating {rating}/5\n\nComments:\n {comments}")
-
-    # 3. Connect to the server and send
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.send_message(msg)
-        print("Email sent successfully!")
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-    return render_template('index.html')
-
-
-
-
-
-
 
 @app.get('/contact-us')
 def contact_us():
@@ -1457,7 +1417,7 @@ def do_feedback():
     msg["Subject"] = f"Rating and Comments from {session.get('user', {}).get('name', 'Unknown')}"
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECEIVER_EMAIL
-    msg.set_content(f"Rating: {rating}\n\nComments:\n{comments}")
+    msg.set_content(f"Rating: {rating}/5\n\nComments:\n{comments}")
 
     # 3. Connect to the server and send
     try:
@@ -1469,6 +1429,14 @@ def do_feedback():
         import traceback
         traceback.print_exc()
     return render_template('index.html')
+
+@app.get('/subscribe')
+def subscribe():
+    return render_template('subscribe.html')
+
+@app.get('/donate')
+def donate():
+    return render_template('donate.html')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'video-build-order':
