@@ -1415,10 +1415,10 @@ def do_feedback():
 
     # 2. Construct the email message
     msg = EmailMessage()
-    msg["Subject"] = f"Automated Email from Python"
+    msg["Subject"] = f"Review from: {session.get('user', {}).get('name', 'Unknown')}"
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECEIVER_EMAIL
-    msg.set_content(f"Rating: {rating}, Comments: {comments}")
+    msg.set_content(f"Rating: {rating}/5\n\nComments:\n {comments}")
 
     # 3. Connect to the server and send
     try:
