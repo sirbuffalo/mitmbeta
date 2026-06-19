@@ -1,7 +1,7 @@
 :root {
-    --top-bar-color: #2bcf4f;
+    --top-bar-color: #08625f;
     --top-bar-text-color: #ffffff;
-    --course_bar-color: #2b80cf;
+    --course_bar-color: #2bcf5c;
     --course_bar-text-color: #ffffff;
     --site-font: "Montserrat", sans-serif;
     --video-title-bar-height: 72px;
@@ -69,7 +69,7 @@ body {
 }
 
 .account-panel {
-    border: 2px solid #2bcf4f;
+    border: 2px solid #0991b3;
     border-radius: 8px;
     max-width: 720px;
     padding: 24px;
@@ -83,7 +83,7 @@ body {
 }
 
 .account-avatar {
-    border: 3px solid #2bcf4f;
+    border: 3px solid #0991b3;
     border-radius: 50%;
     height: 88px;
     object-fit: cover;
@@ -143,7 +143,7 @@ body {
 
 .account-button {
     background: #ffffff;
-    border: 2px solid #2bcf4f;
+    border: 2px solid #1281a0;
     border-radius: 8px;
     color: #000000;
     cursor: pointer;
@@ -156,7 +156,7 @@ body {
 }
 
 .account-button-primary {
-    background: #2bcf4f;
+    background: #1694ae;
     color: #ffffff;
 }
 
@@ -203,7 +203,7 @@ body {
 
 .video-node {
     background: #ffffff;
-    border: 2px solid #2bcf4f;
+    border: 2px solid #1281a0;
     border-radius: 8px;
     min-width: 220px;
     padding: 14px;
@@ -279,7 +279,7 @@ body {
 }
 
 .video-node-finished:has(input:focus-visible) {
-    outline: 3px solid #2f80ff;
+    outline: 3px solid #107d87;
     outline-offset: 2px;
 }
 
@@ -335,7 +335,7 @@ body {
 
 .video-title-bar {
     align-items: center;
-    background: #c8f2d2;
+    background: #b4ebea;
     color: #000000;
     display: grid;
     grid-template-columns: 96px minmax(0, 1fr) 96px;
@@ -354,7 +354,7 @@ body {
 
 .skip-interjection {
     align-self: stretch;
-    background: #8edda2;
+    background: #98f8ff;
     border: 0;
     color: #000000;
     cursor: pointer;

@@ -171,6 +171,7 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     name = db.Column(db.String(255), nullable=True)
     picture = db.Column(db.String(1024), nullable=True)
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -1394,8 +1395,6 @@ def courses(course):
         return render_template('course1.html', user=session.get('user'), course_name = course, courses = COURSES[course])
     else:
         return render_template('courses.html', user=session.get('user'))
-
-
 
 @app.get('/contact-us')
 def contact_us():

@@ -1,17 +1,93 @@
 <!DOCTYPE html>
 <html>
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About | MitM Beta Camp Project</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="/static/style.css">
-    </head>
-    <body>
-        {% include '_top_bar.html' %}
-        GIVE MONEY PLEASE
-    </body>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 80px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2.5rem;
+        }
+
+        p {
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .donate-btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            border-radius: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .donate-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    {% include '_top_bar.html' %}
+
+    <div class="container">
+        <div class="card">
+            <h1>Support the Project</h1>
+
+            <p>
+                If you'd like to help support the MitM Beta Camp Project,
+                donations are greatly appreciated and help keep development moving.
+            </p>
+
+            <a class="donate-btn"
+               href="https://account.venmo.com/u/andywaizai"
+               target="_blank">
+                Donate via Venmo
+            </a>
+        </div>
+    </div>
+</body>
 </html>
