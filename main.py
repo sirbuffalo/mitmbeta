@@ -1456,10 +1456,10 @@ def do_feedback():
 
     # 2. Construct the email message
     msg = EmailMessage()
-    msg["Subject"] = f"Rating and Comments from"
+    msg["Subject"] = f"Rating and Comments from {session.get('user', {}).get('name', 'Unknown')}"
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECEIVER_EMAIL
-    msg.set_content(f"Rating: {rating}, Comments: {comments}")
+    msg.set_content(f"Rating: {rating}\n\nComments:\n{comments}")
 
     # 3. Connect to the server and send
     try:
