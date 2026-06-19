@@ -1382,18 +1382,18 @@ def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
 
-@app.get('/courses/<course>')
-def courses(course):
+#@app.get('/courses/<course>')
+#def courses(course):
 
 
-    user = session.get('user')
-    if user is None:
-        return redirect(url_for('login'))
+#    user = session.get('user')
+#    if user is None:
+#        return redirect(url_for('login'))
 
-    if course != 'home':
-        return render_template('course1.html', user=session.get('user'), course_name = course, courses = COURSES[course])
-    else:
-        return render_template('courses.html', user=session.get('user'))
+#    if course != 'home':
+#        return render_template('course1.html', user=session.get('user'), course_name = course, courses = COURSES[course])
+#    else:
+#        return render_template('courses.html', user=session.get('user'))
 
 
 
