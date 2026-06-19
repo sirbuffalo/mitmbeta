@@ -1396,6 +1396,7 @@ def courses(course):
         return render_template('courses.html', user=session.get('user'))
 
 
+
 @app.get('/contact-us')
 def contact_us():
     return render_template('contact_us.html')
@@ -1407,8 +1408,6 @@ def do_feedback():
 
 
     # 1. Define credentials and addresses
-    SMTP_SERVER = "smtp.gmail.com"  # Replace with your provider's SMTP server
-    SMTP_PORT = 587
     SENDER_EMAIL = "info.project1716@gmail.com"
     SENDER_PASSWORD = "wnmbuqjxwngzrgec"  # Do not use your main login password!
     RECEIVER_EMAIL = "info.project1716@gmail.com"
@@ -1430,6 +1429,14 @@ def do_feedback():
         import traceback
         traceback.print_exc()
     return render_template('index.html')
+
+@app.get('/subscribe')
+def subscribe():
+    return render_template('subscribe.html')
+
+@app.get('/donate')
+def donate():
+    return render_template('donate.html')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'video-build-order':
