@@ -1409,15 +1409,13 @@ def do_feedback():
 
 
     # 1. Define credentials and addresses
-    SMTP_SERVER = "smtp.gmail.com"  # Replace with your provider's SMTP server
-    SMTP_PORT = 587
     SENDER_EMAIL = "info.project1716@gmail.com"
     SENDER_PASSWORD = "wnmbuqjxwngzrgec"  # Do not use your main login password!
     RECEIVER_EMAIL = "info.project1716@gmail.com"
 
     # 2. Construct the email message
     msg = EmailMessage()
-    msg["Subject"] = f"Rating and Comments from"
+    msg["Subject"] = f"Rating and Comments from "
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECEIVER_EMAIL
     msg.set_content(f"Rating: {rating}, Comments: {comments}")
