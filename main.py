@@ -1415,7 +1415,7 @@ def do_feedback():
 
     # 2. Construct the email message
     msg = EmailMessage()
-    msg["Subject"] = f"Review from: {session.get('user', {}).get('name', 'Unknown')}"
+    msg["Subject"] = f"Review from {session.get('user', {}).get('name', 'Unknown')}"
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECEIVER_EMAIL
     msg.set_content(f"Rating {rating}/5\n\nComments:\n {comments}")
