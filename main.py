@@ -11,6 +11,7 @@ import tomllib
 from urllib.parse import urlencode
 from email.message import EmailMessage
 import smtplib
+import random
 
 import requests
 from flask import Flask, Response, jsonify, redirect, render_template, request, session, url_for
@@ -1037,9 +1038,35 @@ def stream_file(path, start, end):
             yield chunk
 
 
+
 @app.get('/')
 def home():
-    return render_template('index.html')
+
+    tree=get_video_tree_layers(get_current_user())
+
+    video_lookup = {}
+
+    for layer in tree:
+        for video in layer["videos"]:
+            video_lookup[video["id"]] = video
+
+
+    available = []
+
+    for layer in tree:
+        for video in layer["videos"]:
+            if video['finished']:
+                continue
+
+            if all(video_lookup[dep['id']]['finished'] for dep in video['dependencies']):
+                available.append(video)
+
+    chosen = random.sample(
+        available,
+        min(4, len(available))
+    )
+
+    return render_template('index.html', chosen=chosen)
 
 
 @app.get('/about-us')
