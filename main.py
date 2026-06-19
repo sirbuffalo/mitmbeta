@@ -82,6 +82,88 @@ VIDEO_AUDIO_BITRATE = '384k'
 VIDEO_OUTPUT_FPS = 30
 HARDWARE_ENCODER = None
 
+COURSES = {
+
+    'home':{
+        'question' : '',
+       'courses' :    [],
+        'links' :   []
+    },
+
+    'Algebra and Calculus A':
+    
+    {
+
+        "question" : "How can we find the minimum of a function?",
+
+    'nodes' : [
+   {"id":"Minimization"},
+   {"id":"Differentiation"},
+   {"id":"Solving\nFor 0s"},
+   {"id":"Solving\nLinear\nEquations"},
+   {"id":"Solving\nQuadratic\nEquations"},
+   {"id":"Power\nRule"},
+   {"id":"Product\nRule"},
+   {"id":"Quotient\nRule"},
+   {"id":"Chain\nRule"}
+   ],
+
+
+    'edges' : [
+   ["Minimization", "Differentiation"],
+   ["Minimization", "Solving\nFor 0s"],
+   ["Product\nRule", "Power\nRule"],
+   ["Quotient\nRule", "Product\nRule"],
+   ["Chain\nRule", "Product\nRule"],
+   ["Differentiation", "Chain\nRule"],
+   ["Differentiation", "Power\nRule"],
+   ["Differentiation", "Quotient\nRule"],
+   ["Differentiation", "Product\nRule"],
+   ["Solving\nFor 0s", "Solving\nLinear\nEquations"],
+   ["Solving\nQuadratic\nEquations", "Solving\nLinear\nEquations"],
+   ["Solving\nFor 0s", "Solving\nQuadratic\nEquations"]
+    ]
+    },
+
+    'Combinatorics': 
+    {
+
+    "question": "Suppose we have 13 people in a line randomly jump either left or right. What is the probability that the teams will differ by at least 2 people?",
+
+
+  "nodes": [
+    {"id": "Basic\nArithmetic"},
+    {"id": "Factorials"},
+    {"id": "Permutations"},
+    {"id": "Combinations"},
+    {"id": "Choose"},
+    {"id": "Overcounting"},
+    {"id": "Complementary\nCounting"},
+    {"id": "Probability"},
+   {"id":"Jumping\nProblem"}
+  ],
+
+  "edges": [
+    ["Factorials", "Basic\nArithmetic"],
+
+    ["Permutations", "Factorials"],
+    ["Combinations", "Factorials"],
+
+    ["Choose", "Combinations"],
+
+    ["Probability", "Basic\nArithmetic"],
+
+    ["Overcounting", "Permutations"],
+    ["Overcounting", "Combinations"],
+
+    ["Complementary\nCounting", "Probability"],
+   ["Jumping\nProblem", "Complementary\nCounting"],
+   ["Jumping\nProblem", "Choose"]
+  ]
+}
+
+}
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1299,6 +1381,21 @@ def google_callback():
 def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
+
+@app.get('/courses/<course>')
+def courses(course):
+
+
+    user = session.get('user')
+    if user is None:
+        return redirect(url_for('login'))
+
+    if course != 'home':
+        return render_template('course1.html', user=session.get('user'), course_name = course, courses = COURSES[course])
+    else:
+        return render_template('courses.html', user=session.get('user'))
+
+
 
 
 @app.get('/contact-us')

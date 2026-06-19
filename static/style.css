@@ -1,6 +1,8 @@
 :root {
     --top-bar-color: #2bcf4f;
     --top-bar-text-color: #ffffff;
+    --course_bar-color: #2b80cf;
+    --course_bar-text-color: #ffffff;
     --site-font: "Montserrat", sans-serif;
     --video-title-bar-height: 72px;
 }
@@ -31,6 +33,26 @@ body {
 }
 
 .top-bar a:hover {
+    text-decoration: underline;
+}
+
+.course_bar {
+    align-items: center;
+    background: var(--course_bar-color);
+    display: flex;
+    gap: 24px;
+    min-height: 56px;
+    padding: 0 24px;
+}
+
+.course_bar a {
+    color: var(--course_bar-text-color);
+    font-family: var(--site-font);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.course_bar a:hover {
     text-decoration: underline;
 }
 

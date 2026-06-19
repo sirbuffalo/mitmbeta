@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Courses | {{ course_name }} | MitM Beta Camp Project</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: sans-serif;
+    background: #f5f5f5;
+}
+
+/* UI layer above canvas */
+header, nav, .page-content, h1 {
+    position: relative;
+    z-index: 10;
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    cursor: default;
+}
+
+/* heading styling */
+h1 {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    margin: 0;
+    background: rgba(255,255,255,0.85);
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: #222;
+}
+
+h3 {
+    position: absolute;
+    top: 75px;
+    left: 20px;
+    margin: 0;
+    background: rgba(255,255,255,0.85);
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: #222;
+    width: 25vw;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔥 RESTORED HEADINGS / LAYOUT -->
+{% include '_top_bar.html' %}
+{% include 'course_nav_bar.html' %}
+
+<main class="page-content">
+{% if course_name != 'home' %}
+    <h1>{{course_name}} Courses</h1>
+    <h3>{{courses["question"]}}</h3>
+{% else %}
+    <h1>Courses Home</h1>
+{% endif %}
+</main>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+//////////////////////////////////////////////////////
+// GRAPH
+//////////////////////////////////////////////////////
+
+const data = {{ courses | tojson }};
+let nodes = data['nodes'];
+let edges = data['edges'];
+
+
+
+
+
+//////////////////////////////////////////////////////
+// AUTO-SIZING
+//////////////////////////////////////////////////////
+
+const PADDING = 20;
+const LINE_HEIGHT = 18;
+
+function computeRadius(text) {
+
+    const lines = text.split("\n");
+
+    ctx.font = "16px sans-serif";
+
+    let maxWidth = 0;
+    for (const line of lines) {
+        maxWidth = Math.max(maxWidth, ctx.measureText(line).width);
+    }
+
+    const textHeight = lines.length * LINE_HEIGHT;
+
+    const diameter = Math.max(maxWidth, textHeight) + PADDING * 2;
+
+    return diameter / 2;
+}
+
+const nodeMap = {};
+
+for (const n of nodes) {
+
+    n.radius = computeRadius(n.id);
+
+    n.x = Math.random() * window.innerWidth;
+    n.y = Math.random() * window.innerHeight;
+    n.vx = 0;
+    n.vy = 0;
+
+    nodeMap[n.id] = n;
+}
+
+//////////////////////////////////////////////////////
+// PHYSICS
+//////////////////////////////////////////////////////
+
+const REPULSION = 7500;
+const SPRING_LENGTH = 200;
+const SPRING_STRENGTH = 0.01;
+const CENTERING_FORCE = 0.0005;
+const DAMPING = 0.92;
+const DOWNWARD_BIAS = 0.35;
+
+function step() {
+
+    for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+
+            const a = nodes[i];
+            const b = nodes[j];
+
+            let dx = b.x - a.x;
+            let dy = b.y - a.y;
+
+            let distSq = dx*dx + dy*dy + 1;
+            let dist = Math.sqrt(distSq);
+
+            let force = REPULSION / distSq;
+
+            let fx = force * dx / dist;
+            let fy = force * dy / dist;
+
+            a.vx -= fx;
+            a.vy -= fy;
+
+            b.vx += fx;
+            b.vy += fy;
+        }
+    }
+
+    for (const [fromId, toId] of edges) {
+
+        const a = nodeMap[fromId];
+        const b = nodeMap[toId];
+
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+
+        let dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+
+        let stretch = dist - SPRING_LENGTH;
+        let springForce = SPRING_STRENGTH * stretch;
+
+        let fx = springForce * dx / dist;
+        let fy = springForce * dy / dist;
+
+        a.vx += fx;
+        a.vy += fy;
+
+        b.vx -= fx;
+        b.vy -= fy;
+
+        let downwardError = dy;
+
+        if (downwardError < SPRING_LENGTH * 0.5) {
+
+            const push = DOWNWARD_BIAS *
+                         (SPRING_LENGTH * 0.5 - downwardError);
+
+            a.vy -= push;
+            b.vy += push;
+        }
+    }
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    for (const n of nodes) {
+
+        n.vx += (cx - n.x) * CENTERING_FORCE;
+        n.vy += (cy - n.y) * CENTERING_FORCE;
+
+        if (!n.dragging) {
+            n.x += n.vx;
+            n.y += n.vy;
+        }
+
+        n.vx *= DAMPING;
+        n.vy *= DAMPING;
+    }
+}
+
+//////////////////////////////////////////////////////
+// DRAWING
+//////////////////////////////////////////////////////
+
+function drawArrow(x1, y1, x2, y2, r1, r2) {
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    const len = Math.sqrt(dx*dx + dy*dy);
+
+    const ux = dx / len;
+    const uy = dy / len;
+
+    const sx = x1 + ux*r1;
+    const sy = y1 + uy*r1;
+
+    const ex = x2 - ux*r2;
+    const ey = y2 - uy*r2;
+
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+
+    const angle = Math.atan2(dy, dx);
+    const arrowSize = 25;
+
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(
+        ex - arrowSize*Math.cos(angle - Math.PI/6),
+        ey - arrowSize*Math.sin(angle - Math.PI/6)
+    );
+    ctx.lineTo(
+        ex - arrowSize*Math.cos(angle + Math.PI/6),
+        ey - arrowSize*Math.sin(angle + Math.PI/6)
+    );
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawNodeText(text, x, y) {
+    const lines = text.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(
+            lines[i],
+            x,
+            y + (i - (lines.length - 1) / 2) * LINE_HEIGHT
+        );
+    }
+}
+
+function render() {
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.strokeStyle = "#444";
+    ctx.fillStyle = "#444";
+    ctx.lineWidth = 2;
+
+    for (const [a,b] of edges) {
+        drawArrow(
+            nodeMap[a].x,
+            nodeMap[a].y,
+            nodeMap[b].x,
+            nodeMap[b].y,
+            nodeMap[a].radius,
+            nodeMap[b].radius
+        );
+    }
+
+    ctx.font = "16px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    for (const n of nodes) {
+
+        const displayRadius =
+    (n === hovered)
+    ? n.radius * 1.15
+    : n.radius;
+
+    ctx.beginPath();
+    ctx.arc(
+        n.x,
+        n.y,
+        displayRadius,
+        0,
+        Math.PI * 2
+    );
+
+ctx.fillStyle =
+    (n === hovered)
+    ? "#5da6ff"
+    : "#4a90e2";
+
+ctx.fill();
+
+ctx.strokeStyle = "#222";
+ctx.lineWidth = (n === hovered) ? 3 : 2;
+ctx.stroke();
+
+ctx.fillStyle = "white";
+drawNodeText(n.id, n.x, n.y);
+    }
+}
+
+//////////////////////////////////////////////////////
+// DRAGGING + HOVER
+//////////////////////////////////////////////////////
+
+let dragged = null;
+let hovered = null;
+
+function getNode(mx, my) {
+    for (const n of nodes) {
+
+        const radius =
+            (n === hovered)
+            ? n.radius * 1.15
+            : n.radius;
+
+        const dx = mx - n.x;
+        const dy = my - n.y;
+
+        if (dx * dx + dy * dy < radius * radius) {
+            return n;
+        }
+    }
+
+    return null;
+}
+
+let timeStamp = Date.now();
+
+canvas.addEventListener("mousedown", e => {
+
+    const n = getNode(e.clientX, e.clientY);
+    timeStamp = Date.now();
+
+    if (n) {
+        dragged = n;
+        n.dragging = true;
+    }
+});
+
+
+canvas.addEventListener("mousemove", e => {
+
+    const mx = e.clientX;
+    const my = e.clientY;
+
+
+    hovered = getNode(mx, my);
+
+    // change mouse cursor when hovering a node
+    if (hovered) {
+        canvas.style.cursor = "grab";
+    } else {
+        canvas.style.cursor = "default";
+    }
+
+    if (dragged) {
+        dragged.x = mx;
+        dragged.y = my;
+    }
+});
+
+window.addEventListener("mouseup", () => {
+
+
+    if (dragged) {
+
+        console.log(Date.now()-timeStamp);
+        if (Date.now() - timeStamp < 150) {
+            window.location.replace("/");
+        }
+        
+        dragged.dragging = false;
+    }
+
+    dragged = null;
+});
+
+//////////////////////////////////////////////////////
+// LOOP
+//////////////////////////////////////////////////////
+
+function animate() {
+    step();
+    render();
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
