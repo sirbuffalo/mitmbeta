@@ -64,17 +64,33 @@
             return;
         }
 
+        const requestedChecked = event.target.checked;
         fetch(node.dataset.progressUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                seconds: event.target.checked ? 1 : 0,
-                duration: 1,
-                finished: event.target.checked,
+                seconds: requestedChecked ? 1 : 0,
+                duration: requestedChecked ? 1 : null,
+                finished: requestedChecked,
             }),
-        }).catch(() => {});
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Progress was not saved.');
+                }
+
+                return response.json();
+            })
+            .then((data) => {
+                event.target.checked = Boolean(data.finished);
+                syncFinishedHighlight(event.target);
+            })
+            .catch(() => {
+                event.target.checked = !requestedChecked;
+                syncFinishedHighlight(event.target);
+            });
     });
 
     window.addEventListener('resize', drawLines);

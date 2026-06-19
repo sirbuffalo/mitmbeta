@@ -3,12 +3,16 @@
     const fullscreenShell = document.getElementById('video-fullscreen-shell');
     const videoFrame = video.closest('.video-frame');
     const title = document.getElementById('video-title');
+    const titleBars = document.getElementById('video-title-bars');
     const controls = document.getElementById('video-controls');
     const playToggle = document.getElementById('video-play-toggle');
     const scrubber = document.getElementById('video-scrubber');
     const interjectionMarkers = document.getElementById('video-interjection-markers');
     const videoProgress = document.getElementById('video-progress');
     const videoPlayhead = document.getElementById('video-playhead');
+    const pauseOverlay = document.getElementById('video-pause-overlay');
+    const pauseContent = document.getElementById('video-pause-content');
+    const pauseContinue = document.getElementById('video-pause-continue');
     const currentTime = document.getElementById('video-current-time');
     const duration = document.getElementById('video-duration');
     const volumeControl = document.getElementById('video-volume-control');
@@ -24,7 +28,7 @@
     const fullscreenToggle = document.getElementById('video-fullscreen-toggle');
     const skipInterjection = document.getElementById('skip-interjection');
 
-    if (!video || !fullscreenShell || !videoFrame || !title || !controls || !playToggle || !scrubber || !interjectionMarkers || !videoProgress || !videoPlayhead || !currentTime || !duration || !volumeControl || !volumeToggle || !volume || !settingsControl || !settingsToggle || !qualitySelect || !speedSelect || !customSpeedControl || !customSpeed || !customSpeedLabel || !fullscreenToggle || !skipInterjection) {
+    if (!video || !fullscreenShell || !videoFrame || !title || !titleBars || !controls || !playToggle || !scrubber || !interjectionMarkers || !videoProgress || !videoPlayhead || !pauseOverlay || !pauseContent || !pauseContinue || !currentTime || !duration || !volumeControl || !volumeToggle || !volume || !settingsControl || !settingsToggle || !qualitySelect || !speedSelect || !customSpeedControl || !customSpeed || !customSpeedLabel || !fullscreenToggle || !skipInterjection) {
         return;
     }
 
@@ -35,8 +39,20 @@
     const ranges = JSON.parse(video.dataset.interjections || '[]')
         .filter((range) => Number.isFinite(range.start) && Number.isFinite(range.end) && range.end > range.start)
         .sort((left, right) => left.start - right.start);
+    const pauses = JSON.parse(video.dataset.pauses || '[]')
+        .filter((pause) => Number.isFinite(pause.time) && typeof pause.markdown === 'string')
+        .sort((left, right) => left.time - right.time)
+        .map((pause, index) => ({
+            ...pause,
+            id: pause.id ?? `pause-${index}-${pause.time}`,
+        }));
     const qualitySources = JSON.parse(video.dataset.qualitySources || '[]');
     const maxMarkerDepth = Math.min(Math.max(...ranges.map((range) => range.depth || 0), 0), 6);
+    const timelineColors = ['#8edda2', '#ff1f1f', '#ff9f1f', '#ffd21f', '#2bcf4f', '#2f80ff', '#8b5cff'];
+    const titleBarColors = ['#c8f2d2', '#f7c7c7', '#f4d7b4', '#f4e8ad', '#c8f2d2', '#c8dcf7', '#d8ccf7'];
+    const titleBarHeight = 46;
+    const reservedTitleBarsHeight = Math.max(maxMarkerDepth, 1) * titleBarHeight;
+    const progressSaveIntervalMs = 5000;
     let timelineAnimationFrame;
     let controlsHideTimer;
     let hlsPlayer = null;
@@ -46,7 +62,31 @@
     let lastSavedVideoSecond = savedStartTime;
     let lastPlaybackTime = savedStartTime;
     let selectedPresetSpeed = 1;
+    let titleStackKey = '';
+    const dismissedPauses = new Set(pauses.filter((pause) => pause.time < savedStartTime - 0.5).map((pause) => pause.id));
     let scrubbing = false;
+
+    const iconPaths = {
+        fullscreen: 'M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z',
+        fullscreen_exit: 'M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z',
+        pause: 'M6 19h4V5H6v14zm8-14v14h4V5h-4z',
+        play_arrow: 'M8 5v14l11-7z',
+        settings: 'M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.37-.31-.6-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98L14.5 2.42C14.47 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.5.42L9.12 5.07c-.61.25-1.18.59-1.69.98l-2.49-1c-.23-.08-.48 0-.6.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.08.65-.08.98s.03.66.08.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.37.31.6.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.04.24.25.42.5.42h4c.25 0 .47-.18.5-.42l.38-2.65c.61-.25 1.18-.59 1.69-.98l2.49 1c.23.08.48 0 .6-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z',
+        volume_down: 'M18.5 12c0-1.77-1-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z',
+        volume_off: 'M16.5 12c0-1.77-1-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.62 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73L16.25 17.52c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z',
+        volume_up: 'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z',
+    };
+
+    function iconSvg(name) {
+        const path = iconPaths[name] || iconPaths.settings;
+        return `<svg class="video-control-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${path}"></path></svg>`;
+    }
+
+    function renderInitialIcons() {
+        document.querySelectorAll('.video-control-icon[data-icon]').forEach((icon) => {
+            icon.outerHTML = iconSvg(icon.dataset.icon);
+        });
+    }
 
     function formatTime(seconds) {
         if (!Number.isFinite(seconds)) {
@@ -70,6 +110,13 @@
             .sort((left, right) => right.depth - left.depth || right.start - left.start)[0] || null;
     }
 
+    function getCurrentRanges() {
+        const time = video.currentTime || 0;
+        return ranges
+            .filter((range) => time >= range.start && time < range.end)
+            .sort((left, right) => left.depth - right.depth || left.start - right.start);
+    }
+
     function getCurrentInterjectionRange() {
         const time = video.currentTime || 0;
         return ranges
@@ -79,8 +126,8 @@
 
     function updatePlayToggle() {
         playToggle.innerHTML = video.paused
-            ? '<span class="material-symbols-rounded" aria-hidden="true">play_arrow</span>'
-            : '<span class="material-symbols-rounded" aria-hidden="true">pause</span>';
+            ? iconSvg('play_arrow')
+            : iconSvg('pause');
         playToggle.setAttribute('aria-label', video.paused ? 'Play' : 'Pause');
     }
 
@@ -92,19 +139,70 @@
             icon = 'volume_down';
         }
 
-        volumeToggle.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">${icon}</span>`;
+        volumeToggle.innerHTML = iconSvg(icon);
     }
 
     function updateFullscreenToggle() {
         const isFullscreen = document.fullscreenElement === fullscreenShell;
-        fullscreenToggle.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">${isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>`;
+        fullscreenToggle.innerHTML = iconSvg(isFullscreen ? 'fullscreen_exit' : 'fullscreen');
         fullscreenToggle.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Fullscreen');
     }
 
     function updateTitleAndSkip() {
-        const range = getCurrentRange();
+        const activeRanges = getCurrentRanges();
+        const range = activeRanges[activeRanges.length - 1] || null;
         const interjectionRange = getCurrentInterjectionRange();
+        const displayRanges = [];
+        activeRanges.forEach((activeRange) => {
+            const key = `${activeRange.depth}:${activeRange.video_id || activeRange.title}`;
+            const existingIndex = displayRanges.findIndex((displayRange) => `${displayRange.depth}:${displayRange.video_id || displayRange.title}` === key);
+            if (existingIndex === -1) {
+                displayRanges.push(activeRange);
+            } else if (activeRange.is_container && !displayRanges[existingIndex].is_container) {
+                displayRanges[existingIndex] = activeRange;
+            }
+        });
+        if (displayRanges.length === 0) {
+            displayRanges.push({ depth: 0, title: mainTitle });
+        }
         title.textContent = range ? range.title : mainTitle;
+        const nextTitleStackKey = JSON.stringify(displayRanges.map((activeRange) => [
+            activeRange.depth,
+            activeRange.video_id || '',
+            activeRange.title || '',
+            activeRange.skip_end ?? '',
+            finishedVideos.has(activeRange.video_id),
+        ]));
+        if (nextTitleStackKey !== titleStackKey) {
+            titleStackKey = nextTitleStackKey;
+            titleBars.replaceChildren();
+            [...displayRanges].reverse().forEach((activeRange) => {
+                const activeDepth = Math.min(Math.max(activeRange.depth, 0), 6);
+                const bar = document.createElement('div');
+                const spacer = document.createElement('div');
+                const heading = document.createElement('h1');
+                bar.className = 'video-title-bar';
+                bar.style.setProperty('--active-title-bar-color', titleBarColors[activeDepth]);
+                bar.style.setProperty('--active-skip-color', timelineColors[activeDepth]);
+                heading.textContent = activeRange.title || mainTitle;
+                bar.append(spacer, heading);
+                if (activeRange.depth > 0 && Number.isFinite(activeRange.skip_end)) {
+                    const skipButton = document.createElement('button');
+                    skipButton.className = 'skip-interjection';
+                    skipButton.type = 'button';
+                    skipButton.textContent = 'Skip';
+                    skipButton.dataset.skipEnd = String(activeRange.skip_end);
+                    if (finishedVideos.has(activeRange.video_id)) {
+                        skipButton.classList.add('is-finished');
+                    }
+                    bar.append(skipButton);
+                } else {
+                    bar.append(document.createElement('div'));
+                }
+                titleBars.append(bar);
+            });
+            fullscreenShell.style.setProperty('--active-title-bars-height', `${reservedTitleBarsHeight}px`);
+        }
         skipInterjection.hidden = !interjectionRange || !Number.isFinite(interjectionRange.skip_end);
         skipInterjection.classList.toggle(
             'is-finished',
@@ -147,6 +245,7 @@
     }
 
     function updateTimeline() {
+        refreshDismissedPauses();
         const totalDuration = getVideoDuration();
         if (markerDuration !== totalDuration) {
             renderInterjectionMarkers();
@@ -169,6 +268,15 @@
         updateTitleAndSkip();
     }
 
+    function refreshDismissedPauses() {
+        const currentTimeValue = video.currentTime || 0;
+        pauses.forEach((pause) => {
+            if (Math.abs(currentTimeValue - pause.time) > 0.75) {
+                dismissedPauses.delete(pause.id);
+            }
+        });
+    }
+
     function animateTimeline() {
         updateTimeline();
         if (!video.paused) {
@@ -187,6 +295,10 @@
     }
 
     function showControls() {
+        if (!pauseOverlay.hidden) {
+            return;
+        }
+
         controls.classList.add('is-visible');
         clearTimeout(controlsHideTimer);
 
@@ -199,6 +311,12 @@
     }
 
     function updateControlsVisibility() {
+        if (!pauseOverlay.hidden) {
+            controls.classList.remove('is-visible');
+            clearTimeout(controlsHideTimer);
+            return;
+        }
+
         if (video.paused) {
             controls.classList.add('is-visible');
             clearTimeout(controlsHideTimer);
@@ -211,6 +329,90 @@
         const playPromise = video.play();
         if (playPromise) {
             playPromise.catch(() => {});
+        }
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function markdownToHtml(markdown) {
+        if (!markdown.trim()) {
+            return '';
+        }
+
+        return markdown
+            .trim()
+            .split(/\n{2,}/)
+            .map((block) => {
+                const text = block.trim();
+                const lines = text.split('\n');
+                if (text.startsWith('# ')) {
+                    return `<h1>${escapeHtml(lines[0].slice(2).trim())}</h1>${markdownToHtml(lines.slice(1).join('\n'))}`;
+                }
+
+                if (text.startsWith('## ')) {
+                    return `<h2>${escapeHtml(lines[0].slice(3).trim())}</h2>${markdownToHtml(lines.slice(1).join('\n'))}`;
+                }
+
+                if (lines.every((line) => line.trim().startsWith('- '))) {
+                    const items = lines
+                        .map((line) => `<li>${escapeHtml(line.trim().slice(2))}</li>`)
+                        .join('');
+                    return `<ul>${items}</ul>`;
+                }
+
+                return `<p>${escapeHtml(text).replaceAll('\n', '<br>')}</p>`;
+            })
+            .join('');
+    }
+
+    function showPause(pause) {
+        pauseContent.innerHTML = markdownToHtml(pause.markdown);
+        pauseOverlay.hidden = false;
+        controls.classList.remove('is-visible');
+        settingsControl.classList.remove('is-open');
+        volumeControl.classList.remove('is-open');
+        video.pause();
+        updateControlsVisibility();
+    }
+
+    function showPauseAtCurrentTime() {
+        const currentTimeValue = video.currentTime || 0;
+        const pause = pauses.find((candidate) => (
+            !dismissedPauses.has(candidate.id)
+            && Math.abs(currentTimeValue - candidate.time) <= 0.5
+        ));
+        if (pause) {
+            video.currentTime = pause.time;
+            lastPlaybackTime = pause.time;
+            showPause(pause);
+            return true;
+        }
+
+        return false;
+    }
+
+    function maybeShowPause(previousTime, currentTimeValue) {
+        const timeDelta = currentTimeValue - previousTime;
+        if (video.seeking || scrubbing || timeDelta <= 0 || timeDelta > 2.5 || !pauseOverlay.hidden) {
+            return;
+        }
+
+        const pause = pauses.find((candidate) => (
+            !dismissedPauses.has(candidate.id)
+            && previousTime < candidate.time
+            && currentTimeValue >= candidate.time
+        ));
+        if (pause) {
+            video.currentTime = pause.time;
+            lastPlaybackTime = pause.time;
+            showPause(pause);
         }
     }
 
@@ -268,7 +470,7 @@
 
         const now = Date.now();
         const videoSecond = video.currentTime || 0;
-        if (!force && (now - lastProgressSaveTime < 15000 || Math.abs(videoSecond - lastSavedVideoSecond) < 1)) {
+        if (!force && (now - lastProgressSaveTime < progressSaveIntervalMs || Math.abs(videoSecond - lastSavedVideoSecond) < 0.5)) {
             return;
         }
 
@@ -317,6 +519,8 @@
         const timeDelta = currentTimeValue - previousTime;
         lastPlaybackTime = currentTimeValue;
 
+        maybeShowPause(previousTime, currentTimeValue);
+
         if (video.seeking || scrubbing || timeDelta <= 0 || timeDelta > 2.5) {
             return;
         }
@@ -335,6 +539,11 @@
     function seekTo(seconds) {
         const totalDuration = getVideoDuration();
         const targetTime = Math.max(Math.min(seconds, totalDuration), 0);
+        pauses.forEach((pause) => {
+            if (Math.abs(targetTime - pause.time) > 0.5) {
+                dismissedPauses.delete(pause.id);
+            }
+        });
         lastRequestedSeekTime = targetTime;
         lastPlaybackTime = targetTime;
         video.currentTime = targetTime;
@@ -389,7 +598,7 @@
             video.currentTime = Math.min(targetStartTime, getVideoDuration());
             lastPlaybackTime = video.currentTime || 0;
             updateTimeline();
-            if (shouldPlay) {
+            if (!showPauseAtCurrentTime() && shouldPlay) {
                 playWhenReady();
             }
         }, { once: true });
@@ -431,6 +640,7 @@
                 video.currentTime = Math.min(targetStartTime, getVideoDuration() || targetStartTime);
                 lastPlaybackTime = video.currentTime || 0;
                 startHlsLoadAt(targetStartTime);
+                showPauseAtCurrentTime();
             });
             hlsPlayer.on(window.Hls.Events.ERROR, (_event, data) => {
                 if (!data.fatal) {
@@ -573,6 +783,27 @@
         event.stopPropagation();
     });
 
+    titleBars.addEventListener('pointerdown', (event) => {
+        const skipButton = event.target.closest('.skip-interjection[data-skip-end]');
+        if (!skipButton) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        seekTo(Number(skipButton.dataset.skipEnd));
+    });
+
+    pauseContinue.addEventListener('click', () => {
+        const pause = pauses.find((candidate) => Math.abs((video.currentTime || 0) - candidate.time) <= 0.5);
+        if (pause) {
+            dismissedPauses.add(pause.id);
+        }
+        pauseOverlay.hidden = true;
+        lastPlaybackTime = video.currentTime || 0;
+        playWhenReady();
+    });
+
     fullscreenToggle.addEventListener('click', () => {
         if (document.fullscreenElement === fullscreenShell) {
             document.exitFullscreen?.();
@@ -671,6 +902,7 @@
     });
     window.addEventListener('pagehide', () => saveProgress(true));
 
+    renderInitialIcons();
     updatePlayToggle();
     updateFullscreenToggle();
     video.volume = 1;
@@ -678,6 +910,7 @@
     setPlaybackSpeed(1);
     volume.value = '1';
     updateVolumeIcon();
+    fullscreenShell.style.setProperty('--active-title-bars-height', `${reservedTitleBarsHeight}px`);
     updateTimeline();
     updateControlsVisibility();
     loadVideoSource(video.dataset.mainSrc, savedStartTime, true);

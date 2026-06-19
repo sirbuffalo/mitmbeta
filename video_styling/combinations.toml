@@ -1,5 +1,18 @@
-title='Combinations'
+title = 'Combinations'
+page_markdown = '''
+# Combinations
+- banana
+- test
+'''
 
 [[interjections]]
 time = 10
 video = 'factorials'
+
+[[pauses]]
+time = 5
+markdown = '''
+# How could you calculate this?
+## test
+- r
+'''

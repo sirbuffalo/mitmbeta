@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from html import escape
 from os import getenv, makedirs
 from pathlib import Path
 import re
@@ -172,6 +173,7 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     name = db.Column(db.String(255), nullable=True)
     picture = db.Column(db.String(1024), nullable=True)
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -216,7 +218,7 @@ def get_current_user():
     if not session_user:
         return None
 
-    return User.query.get(session_user.get('id'))
+    return db.session.get(User, session_user.get('id'))
 
 
 def valid_video_id(video_id):
@@ -243,6 +245,36 @@ def load_video_styling(video_id):
         return tomllib.load(file)
 
 
+def markdown_to_html(markdown):
+    if not isinstance(markdown, str) or not markdown.strip():
+        return ''
+
+    html_blocks = []
+    for block in re.split(r'\n{2,}', markdown.strip()):
+        text = block.strip()
+        lines = text.splitlines()
+        if not lines:
+            continue
+
+        first_line = lines[0].strip()
+        rest = '\n'.join(lines[1:])
+        if first_line.startswith('# '):
+            html_blocks.append(f'<h1>{escape(first_line[2:].strip())}</h1>')
+            if rest.strip():
+                html_blocks.append(markdown_to_html(rest))
+        elif first_line.startswith('## '):
+            html_blocks.append(f'<h2>{escape(first_line[3:].strip())}</h2>')
+            if rest.strip():
+                html_blocks.append(markdown_to_html(rest))
+        elif all(line.strip().startswith('- ') for line in lines):
+            items = ''.join(f'<li>{escape(line.strip()[2:].strip())}</li>' for line in lines)
+            html_blocks.append(f'<ul>{items}</ul>')
+        else:
+            html_blocks.append(f'<p>{escape(text).replace(chr(10), "<br>")}</p>')
+
+    return ''.join(html_blocks)
+
+
 def get_ffmpeg_path():
     configured_ffmpeg = getenv('FFMPEG_BIN')
     if configured_ffmpeg and Path(configured_ffmpeg).is_file():
@@ -264,34 +296,7 @@ def get_ffmpeg_path():
 
 def get_h264_encoder():
     global HARDWARE_ENCODER
-    if HARDWARE_ENCODER is not None:
-        return HARDWARE_ENCODER
-
-    ffmpeg_path = get_ffmpeg_path()
-    if ffmpeg_path is None:
-        raise RuntimeError('ffmpeg is required to build videos.')
-
-    result = subprocess.run(
-        [
-            ffmpeg_path,
-            '-hide_banner',
-            '-f',
-            'lavfi',
-            '-i',
-            'testsrc2=size=128x72:rate=24:duration=0.25',
-            '-c:v',
-            'h264_videotoolbox',
-            '-allow_sw',
-            '1',
-            '-f',
-            'null',
-            '-',
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    HARDWARE_ENCODER = 'h264_videotoolbox' if result.returncode == 0 else 'libx264'
+    HARDWARE_ENCODER = 'libx264'
     return HARDWARE_ENCODER
 
 
@@ -345,6 +350,54 @@ def iter_valid_interjections(video_data, video_duration):
             yield interjection_time, interjection_video_id
 
 
+def iter_valid_pauses(video_data, video_duration):
+    pauses = video_data.get('pauses', [])
+    for index, pause in enumerate(sorted(pauses, key=lambda item: item.get('time', 0))):
+        try:
+            pause_time = float(pause.get('time'))
+        except (TypeError, ValueError):
+            continue
+
+        markdown = pause.get('markdown')
+        if not isinstance(markdown, str):
+            continue
+
+        if 0 <= pause_time <= video_duration:
+            yield index, pause_time, markdown
+
+
+def iter_valid_cuts(video_data, video_duration):
+    cuts = []
+    for cut in video_data.get('cuts', []):
+        try:
+            cut_start = float(cut.get('start', 0))
+            cut_end = float(cut.get('end', video_duration))
+        except (TypeError, ValueError):
+            continue
+
+        cut_start = max(min(cut_start, video_duration), 0)
+        cut_end = max(min(cut_end, video_duration), 0)
+        if cut_end > cut_start:
+            cuts.append((cut_start, cut_end))
+
+    for cut_start, cut_end in sorted(cuts):
+        yield cut_start, cut_end
+
+
+def get_playable_source_ranges(video_data, video_duration):
+    playable_ranges = []
+    cursor = 0
+    for cut_start, cut_end in iter_valid_cuts(video_data, video_duration):
+        if cut_start > cursor:
+            playable_ranges.append((cursor, cut_start))
+        cursor = max(cursor, cut_end)
+
+    if cursor < video_duration:
+        playable_ranges.append((cursor, video_duration))
+
+    return playable_ranges
+
+
 def offset_ranges(ranges, offset):
     shifted_ranges = []
     for range_data in ranges:
@@ -359,6 +412,16 @@ def offset_ranges(ranges, offset):
         shifted_ranges.append(shifted_range)
 
     return shifted_ranges
+
+
+def offset_pauses(pauses, offset):
+    return [
+        {
+            **pause,
+            'time': pause['time'] + offset,
+        }
+        for pause in pauses
+    ]
 
 
 def build_video_plan(video_id, depth=0, stack=None):
@@ -380,6 +443,7 @@ def build_video_plan(video_id, depth=0, stack=None):
     source_cursor = 0
     segments = []
     ranges = []
+    pauses = []
 
     def add_source_segment(start, end):
         nonlocal timeline_cursor
@@ -389,6 +453,18 @@ def build_video_plan(video_id, depth=0, stack=None):
 
         segment_start = timeline_cursor
         timeline_cursor += segment_duration
+        for pause_index, pause_time, markdown in iter_valid_pauses(video_data, video_duration):
+            if start <= pause_time < end:
+                pauses.append(
+                    {
+                        'id': f'{video_id}:{pause_index}:{pause_time}',
+                        'time': segment_start + (pause_time - start),
+                        'video_id': video_id,
+                        'title': title,
+                        'markdown': markdown,
+                    }
+                )
+
         segments.append(
             {
                 'source': video_file,
@@ -408,19 +484,35 @@ def build_video_plan(video_id, depth=0, stack=None):
             }
         )
 
-    for interjection_time, interjection_video_id in iter_valid_interjections(video_data, video_duration):
-        if interjection_time < source_cursor:
-            continue
+    interjections = list(iter_valid_interjections(video_data, video_duration))
+    for range_start, range_end in get_playable_source_ranges(video_data, video_duration):
+        source_cursor = range_start
+        for interjection_time, interjection_video_id in interjections:
+            if interjection_time < range_start or interjection_time >= range_end:
+                continue
 
-        add_source_segment(source_cursor, interjection_time)
-        child_plan = build_video_plan(interjection_video_id, depth + 1, [*stack, video_id])
-        child_start = timeline_cursor
-        segments.extend(child_plan['segments'])
-        ranges.extend(offset_ranges(child_plan['ranges'], child_start))
-        timeline_cursor += child_plan['duration']
-        source_cursor = interjection_time
+            add_source_segment(source_cursor, interjection_time)
+            child_plan = build_video_plan(interjection_video_id, depth + 1, [*stack, video_id])
+            child_start = timeline_cursor
+            segments.extend(child_plan['segments'])
+            ranges.extend(offset_ranges(child_plan['ranges'], child_start))
+            pauses.extend(offset_pauses(child_plan['pauses'], child_start))
+            timeline_cursor += child_plan['duration']
+            child_data = load_video_styling(interjection_video_id) or {}
+            ranges.append(
+                {
+                    'start': child_start,
+                    'end': timeline_cursor,
+                    'video_id': interjection_video_id,
+                    'title': child_data.get('title', interjection_video_id),
+                    'depth': depth + 1,
+                    'skip_end': timeline_cursor,
+                    'is_container': True,
+                }
+            )
+            source_cursor = interjection_time
 
-    add_source_segment(source_cursor, video_duration)
+        add_source_segment(source_cursor, range_end)
 
     if depth > 0:
         for range_data in ranges:
@@ -431,6 +523,7 @@ def build_video_plan(video_id, depth=0, stack=None):
         'duration': timeline_cursor,
         'segments': segments,
         'ranges': ranges,
+        'pauses': pauses,
     }
 
 
@@ -502,6 +595,15 @@ def get_hls_master_playlist(video_id):
 
     playlist_path = HLS_VIDEO_DIR / hls_video_dir_name(video_id) / 'master.m3u8'
     return playlist_path, plan['ranges']
+
+
+def get_video_pauses(video_id, quality='1080p'):
+    try:
+        plan = build_composed_video_plan(video_id, quality)
+    except RuntimeError:
+        plan = build_video_plan(video_id)
+
+    return plan['pauses']
 
 
 def get_quality_sources(video_id):
@@ -634,6 +736,7 @@ def build_composed_video_plan(video_id, quality='1080p', depth=0, stack=None):
     source_cursor = 0
     segments = []
     ranges = []
+    pauses = []
 
     def add_source_segment(start, end):
         nonlocal timeline_cursor
@@ -643,6 +746,18 @@ def build_composed_video_plan(video_id, quality='1080p', depth=0, stack=None):
 
         segment_start = timeline_cursor
         timeline_cursor += segment_duration
+        for pause_index, pause_time, markdown in iter_valid_pauses(video_data, video_duration):
+            if start <= pause_time < end:
+                pauses.append(
+                    {
+                        'id': f'{video_id}:{pause_index}:{pause_time}',
+                        'time': segment_start + (pause_time - start),
+                        'video_id': video_id,
+                        'title': title,
+                        'markdown': markdown,
+                    }
+                )
+
         segments.append(
             {
                 'source': source_file,
@@ -662,31 +777,47 @@ def build_composed_video_plan(video_id, quality='1080p', depth=0, stack=None):
             }
         )
 
-    for interjection_time, interjection_video_id in iter_valid_interjections(video_data, video_duration):
-        if interjection_time < source_cursor:
-            continue
+    interjections = list(iter_valid_interjections(video_data, video_duration))
+    for range_start, range_end in get_playable_source_ranges(video_data, video_duration):
+        source_cursor = range_start
+        for interjection_time, interjection_video_id in interjections:
+            if interjection_time < range_start or interjection_time >= range_end:
+                continue
 
-        add_source_segment(source_cursor, interjection_time)
-        child_video_path = MERGED_VIDEO_DIR / merged_video_name(interjection_video_id, quality)
-        if not child_video_path.is_file():
-            raise RuntimeError(f'Video {interjection_video_id} must be premade before {video_id}.')
+            add_source_segment(source_cursor, interjection_time)
+            child_video_path = MERGED_VIDEO_DIR / merged_video_name(interjection_video_id, quality)
+            if not child_video_path.is_file():
+                raise RuntimeError(f'Video {interjection_video_id} must be premade before {video_id}.')
 
-        child_plan = build_composed_video_plan(interjection_video_id, quality, depth + 1, [*stack, video_id])
-        child_info = get_video_info(child_video_path)
-        child_start = timeline_cursor
-        timeline_cursor += child_info['duration']
-        segments.append(
-            {
-                'source': child_video_path,
-                'start': 0,
-                'duration': child_info['duration'],
-                'fps': child_info['fps'],
-            }
-        )
-        ranges.extend(offset_ranges(child_plan['ranges'], child_start))
-        source_cursor = interjection_time
+            child_plan = build_composed_video_plan(interjection_video_id, quality, depth + 1, [*stack, video_id])
+            child_info = get_video_info(child_video_path)
+            child_start = timeline_cursor
+            timeline_cursor += child_info['duration']
+            segments.append(
+                {
+                    'source': child_video_path,
+                    'start': 0,
+                    'duration': child_info['duration'],
+                    'fps': child_info['fps'],
+                }
+            )
+            ranges.extend(offset_ranges(child_plan['ranges'], child_start))
+            pauses.extend(offset_pauses(child_plan['pauses'], child_start))
+            child_data = load_video_styling(interjection_video_id) or {}
+            ranges.append(
+                {
+                    'start': child_start,
+                    'end': timeline_cursor,
+                    'video_id': interjection_video_id,
+                    'title': child_data.get('title', interjection_video_id),
+                    'depth': depth + 1,
+                    'skip_end': timeline_cursor,
+                    'is_container': True,
+                }
+            )
+            source_cursor = interjection_time
 
-    add_source_segment(source_cursor, video_duration)
+        add_source_segment(source_cursor, range_end)
 
     if depth > 0:
         for range_data in ranges:
@@ -697,6 +828,7 @@ def build_composed_video_plan(video_id, quality='1080p', depth=0, stack=None):
         'duration': timeline_cursor,
         'segments': segments,
         'ranges': ranges,
+        'pauses': pauses,
     }
 
 
@@ -713,7 +845,12 @@ def build_merged_video(video_id, quality='1080p'):
     plan = build_composed_video_plan(video_id, quality)
     output_path = MERGED_VIDEO_DIR / merged_video_name(video_id, quality)
 
-    if not get_video_dependencies(video_id):
+    if (
+        not get_video_dependencies(video_id)
+        and len(plan['segments']) == 1
+        and plan['segments'][0]['start'] == 0
+        and abs(plan['segments'][0]['duration'] - get_video_duration(base_video_path)) < 0.01
+    ):
         with tempfile.TemporaryDirectory(dir=MERGED_VIDEO_DIR) as temp_dir:
             temp_output_path = Path(temp_dir) / output_path.name
             shutil.copy2(base_video_path, temp_output_path)
@@ -1009,18 +1146,25 @@ def get_video_tree_layers(user=None):
 
 def premake_merged_videos(video_ids=None):
     build_order = get_dependency_build_order(video_ids)
+    print(f'Build order: {", ".join(build_order)}', flush=True)
     for video_id in build_order:
         for quality in VIDEO_QUALITIES:
+            print(f'Building base {video_id} {quality}...', flush=True)
             build_base_video(video_id, quality)
+            print(f'Finished base {video_id} {quality}', flush=True)
 
     built_videos = []
     for video_id in build_order:
         for quality in VIDEO_QUALITIES:
+            print(f'Building merged {video_id} {quality}...', flush=True)
             output_path, _timeline_ranges = build_merged_video(video_id, quality)
             built_videos.append(output_path)
+            print(f'Finished merged {video_id} {quality}', flush=True)
 
     for video_id in build_order:
+        print(f'Building HLS {video_id}...', flush=True)
         build_hls_master_playlist(video_id)
+        print(f'Finished HLS {video_id}', flush=True)
 
     return built_videos
 
@@ -1111,6 +1255,23 @@ def video(video_id):
     if video_data is None:
         return 'Video not found', 404
 
+    return render_template(
+        'video_detail.html',
+        title=video_data.get('title', video_id),
+        page_html=markdown_to_html(video_data.get('page_markdown') or f'# {video_data.get("title", video_id)}'),
+        play_url=url_for('video_player', video_id=video_id),
+    )
+
+
+@app.get('/video/<video_id>/play')
+def video_player(video_id):
+    if not valid_video_id(video_id):
+        return 'Video not found', 404
+
+    video_data = load_video_styling(video_id)
+    if video_data is None:
+        return 'Video not found', 404
+
     selected_quality = request.args.get('quality', 'auto')
     if selected_quality != 'auto' and selected_quality not in VIDEO_QUALITIES:
         selected_quality = 'auto'
@@ -1120,6 +1281,7 @@ def video(video_id):
             hls_playlist_path, timeline_ranges = get_hls_master_playlist(video_id)
         else:
             hls_playlist_path, timeline_ranges = get_hls_video(video_id, selected_quality)
+        timeline_pauses = get_video_pauses(video_id, '1080p' if selected_quality == 'auto' else selected_quality)
     except RuntimeError as error:
         return str(error), 500
 
@@ -1153,6 +1315,7 @@ def video(video_id):
             ),
         ),
         interjections=timeline_ranges,
+        pauses=timeline_pauses,
         quality_sources=quality_sources,
         finished_video_ids=finished_video_ids,
         selected_quality=selected_quality,
@@ -1196,13 +1359,20 @@ def save_video_progress(video_id):
         seconds = duration
     elif data.get('finished') is False:
         seconds = 0
-        duration = duration if duration and duration > 0 else None
+        duration = None
 
     progress.seconds = seconds
     progress.duration = duration if duration and duration > 0 else None
     db.session.commit()
 
-    return jsonify({'saved': True, 'seconds': progress.seconds})
+    return jsonify(
+        {
+            'saved': True,
+            'seconds': progress.seconds,
+            'duration': progress.duration,
+            'finished': is_video_progress_finished(progress),
+        }
+    )
 
 
 def serve_video_path(video_path):
@@ -1421,8 +1591,6 @@ def logout():
 #        return render_template('course1.html', user=session.get('user'), course_name = course, courses = COURSES[course])
 #    else:
 #        return render_template('courses.html', user=session.get('user'))
-
-
 
 @app.get('/contact-us')
 def contact_us():
