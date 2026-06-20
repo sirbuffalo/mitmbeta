@@ -20,6 +20,33 @@
             font-family: 'Montserrat', sans-serif;
             background: #f4f7fb;
             color: #333;
+
+
+
+    background-image: url('/static/images/background.png'); 
+            
+    background-repeat: no-repeat; 
+            
+    background-size: auto, 100vh; 
+            
+    background-position: 0vw -35vh; 
+            
+    background-attachment: fixed; 
+
+    background-repeat: repeat;
+    
+    animation: loopBackground 120s linear infinite; 
+}
+
+@keyframes loopBackground {
+    from {
+        background-position: 0 0vh;
+    }
+    to {
+        background-position: 100vw 0vh; 
+    }
+
+
         }
 
         .feedback-container {

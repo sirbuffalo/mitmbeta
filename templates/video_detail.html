@@ -10,13 +10,56 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <style>
+        .video-detail-page {
+
+
+
+
+
+    background-image: url('/static/images/background.png'); 
+            
+    background-repeat: no-repeat; 
+            
+    background-size: auto, 100vh; 
+            
+    background-position: 0vw -35vh; 
+            
+    background-attachment: fixed; 
+
+    background-repeat: repeat;
+    
+    animation: loopBackground 120s linear infinite; 
+}
+
+@keyframes loopBackground {
+    from {
+        background-position: 0 0vh;
+    }
+    to {
+        background-position: 100vw 0vh; 
+    }
+}
+
+.video-detail-markdown {
+
+            background: rgba(255, 255, 255, 0.603);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            margin-top: 10vh;
+}
+    </style>
     {% include '_top_bar.html' %}
     <main class="video-detail-page">
         <section class="video-detail">
             <div class="video-detail-markdown">
                 {{ page_html | safe }}
-            </div>
             <a class="video-detail-play" href="{{ play_url }}">Play</a>
+            </div>
         </section>
     </main>
 </body>

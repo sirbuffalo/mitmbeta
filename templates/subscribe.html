@@ -9,8 +9,40 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
+    
     </head>
+
     <body>
+        <style>
+            body{
+
+
+
+
+    background-image: url('/static/images/background.png'); 
+            
+    background-repeat: no-repeat; 
+            
+    background-size: auto, 100vh; 
+            
+    background-position: 0vw -35vh; 
+            
+    background-attachment: fixed; 
+
+    background-repeat: repeat;
+    
+    animation: loopBackground 120s linear infinite; 
+}
+
+@keyframes loopBackground {
+    from {
+        background-position: 0 0vh;
+    }
+    to {
+        background-position: 100vw 0vh; 
+    }
+            }
+        </style>
         {% include '_top_bar.html' %}
         GIVE MONEY PLEASE
     </body>
