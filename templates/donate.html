@@ -20,8 +20,33 @@
             margin: 0;
             font-family: 'Montserrat', sans-serif;
             background: linear-gradient(135deg, #1e293b, #0f172a);
-            color: white;
+            color: rgb(0, 0, 0);
             min-height: 100vh;
+
+
+
+    background-image: url('/static/images/background.png'); 
+            
+    background-repeat: no-repeat; 
+            
+    background-size: auto, 100vh; 
+            
+    background-position: 0vw -35vh; 
+            
+    background-attachment: fixed; 
+
+    background-repeat: repeat;
+    
+    animation: loopBackground 120s linear infinite; 
+}
+
+@keyframes loopBackground {
+    from {
+        background-position: 0 0vh;
+    }
+    to {
+        background-position: 100vw 0vh; 
+    }
         }
 
         .container {
@@ -31,13 +56,14 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.603);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 20px;
             padding: 40px;
             text-align: center;
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            margin-top: 10vh;
         }
 
         h1 {
@@ -46,7 +72,7 @@
         }
 
         p {
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(0, 0, 0, 0.85);
             line-height: 1.7;
             margin-bottom: 30px;
         }
