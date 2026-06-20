@@ -15,16 +15,31 @@
         body {
 
 
+
+
     background-image: url('/static/images/background.png'); 
             
     background-repeat: no-repeat; 
             
-    background-size: cover; 
+    background-size: auto, 100vh; 
             
-    background-position: center; 
+    background-position: 0vw -35vh; 
             
     background-attachment: fixed; 
-        }
+
+    background-repeat: repeat;
+    
+    animation: loopBackground 120s linear infinite; 
+}
+
+@keyframes loopBackground {
+    from {
+        background-position: 0 0vh;
+    }
+    to {
+        background-position: 100vw 0vh; 
+    }
+}
     </style>
     {% include '_top_bar.html' %}
     <main class="page-content">
