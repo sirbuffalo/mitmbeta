@@ -15,17 +15,23 @@
 
 .suggested-videos {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(20vw, 20vw));
+    justify-content: center;
+    gap: 1.5rem;
     width: 100%;
 }
 
 .suggested-videos .video-node {
-    margin-left: 50px;
+    width: 20vw;
     padding: 1rem;
-    border: 2px solid #51ff00;
+    border: 2px solid #08625f;
     border-radius: 12px;
     background: white;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
     box-sizing: border-box;
 }
 
