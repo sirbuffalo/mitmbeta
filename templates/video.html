@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@1" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -25,12 +24,17 @@
                     data-progress-url="{{ progress_url }}"
                     data-finished-videos='{{ finished_video_ids | tojson }}'
                     data-interjections='{{ interjections | tojson }}'
+                    data-pauses='{{ pauses | tojson }}'
                     data-quality-sources='{{ quality_sources | tojson }}'>
                     Your browser does not support the video tag.
                 </video>
+                <div id="video-pause-overlay" class="video-pause-overlay" hidden>
+                    <div id="video-pause-content" class="video-pause-content"></div>
+                    <button id="video-pause-continue" class="video-pause-continue" type="button">Continue</button>
+                </div>
                 <div id="video-controls" class="video-controls">
                     <button id="video-play-toggle" class="video-control-button" type="button" aria-label="Play or pause">
-                        <span class="material-symbols-rounded" aria-hidden="true">pause</span>
+                        <span class="video-control-icon" data-icon="pause" aria-hidden="true"></span>
                     </button>
                     <label class="video-scrubber-label" for="video-scrubber">
                         <span id="video-current-time">0:00</span>
@@ -44,7 +48,7 @@
                     </label>
                     <div id="video-settings-control" class="video-settings-control">
                         <button id="video-settings-toggle" class="video-control-button video-settings-toggle" type="button" aria-label="Settings">
-                            <span class="material-symbols-rounded" aria-hidden="true">settings</span>
+                            <span class="video-control-icon" data-icon="settings" aria-hidden="true"></span>
                         </button>
                         <div id="video-secondary-controls" class="video-secondary-controls">
                             <label class="video-quality-control" for="video-quality">
@@ -72,7 +76,7 @@
                             </div>
                             <div id="video-volume-control" class="video-volume-control">
                                 <button id="video-volume-toggle" class="video-control-button" type="button" aria-label="Volume">
-                                    <span class="material-symbols-rounded" aria-hidden="true">volume_up</span>
+                                    <span class="video-control-icon" data-icon="volume_up" aria-hidden="true"></span>
                                 </button>
                                 <div id="video-volume-popout" class="video-volume-popout">
                                     <input id="video-volume" class="video-volume" type="range" min="0" max="1" value="1" step="0.01" aria-label="Volume">
@@ -81,17 +85,19 @@
                         </div>
                     </div>
                     <button id="video-fullscreen-toggle" class="video-control-button" type="button" aria-label="Fullscreen">
-                        <span class="material-symbols-rounded" aria-hidden="true">fullscreen</span>
+                        <span class="video-control-icon" data-icon="fullscreen" aria-hidden="true"></span>
                     </button>
                 </div>
             </div>
         </main>
-        <footer class="video-title-bar">
-            <div></div>
-            <h1 id="video-title">{{ title }}</h1>
-            <button id="skip-interjection" class="skip-interjection" type="button" hidden>
-                Skip
-            </button>
+        <footer id="video-title-bars" class="video-title-bars">
+            <div class="video-title-bar">
+                <div></div>
+                <h1 id="video-title">{{ title }}</h1>
+                <button id="skip-interjection" class="skip-interjection" type="button" hidden>
+                    Skip
+                </button>
+            </div>
         </footer>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>

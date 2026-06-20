@@ -1,0 +1,47 @@
+title = "Why can't you construct (most) Shapes with Bricks?"
+page_markdown = "# Why can't you construct (most) Shapes with Bricks?"
+
+[[interjections]]
+time = 402
+video = 'exponents'
+
+[[pauses]]
+time = 48.4
+markdown = '''
+# Try constructing a 6 x 6 x 6 cube from 1 x 2 x 4 bricks.
+'''
+
+[[pauses]]
+time = 70.5
+markdown = '''
+# Try tiling the checkerboard without corners with dominos.
+'''
+
+[[pauses]]
+time = 159.5
+markdown = '''
+# Why doesn't it help?
+'''
+
+[[pauses]]
+time = 179.3
+markdown = '''
+# Can you find a coloring that leads to a contradiction?
+'''
+
+[[pauses]]
+time = 318
+markdown = '''
+# Can you prove that it is not possible?
+'''
+
+[[cuts]]
+start = 179.5
+end = 184.3
+
+[[cuts]]
+start = 35
+end = 44
+
+[[cuts]]
+start = 660

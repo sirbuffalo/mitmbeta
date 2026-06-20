@@ -10,11 +10,68 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+
+<style>
+
+.suggested-videos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20vw, 20vw));
+    justify-content: center;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.suggested-videos .video-node {
+    width: 20vw;
+    padding: 1rem;
+    border: 2px solid #08625f;
+    border-radius: 12px;
+    background: white;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    box-sizing: border-box;
+}
+
+
+
+</style>
+
+
+
+{% include 'background.html' %}
 {% include '_top_bar.html' %}
 <main class="page-content">
     <h1>MitM Beta Camp Project</h1>
+    <br><br><br>
     <h2>Suggested Videos</h2>
-</main>
+
 <script src="/static/script.js"></script>
+
+<div class="suggested-videos">
+{% for video in chosen %}
+    <article
+    class="video-node{% if video.finished %} is-finished{% endif %}"
+        data-video-id="{{ video.id }}"
+        data-dependencies="{{ video.dependency_ids | join(',') }}"
+        data-progress-url="{{ url_for('save_video_progress', video_id=video.id) }}">
+        <a class="video-node-title" href="{{ url_for('video', video_id=video.id) }}">{{ video.title }}</a>
+        <label class="video-node-finished">
+            <input type="checkbox" {% if video.finished %}checked{% endif %}>
+            <span class="video-node-check" aria-hidden="true"></span>
+            <span>Finished</span>
+        </label>
+    </article>
+{% endfor %}
+</div>
+
+<script src="/static/videos.js"></script>
+<br><br><br>
+<h2>Demo</h2>
+
+</main>
+
 </body>
 </html>
