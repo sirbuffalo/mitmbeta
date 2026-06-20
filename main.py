@@ -1401,6 +1401,10 @@ def logout():
 def contact_us():
     return render_template('contact_us.html')
 
+@app.get('/demo')
+def demo():
+    return render_template('background.html')
+
 @app.get('/feedback')
 def do_feedback():
     rating = request.args.get('rating')
