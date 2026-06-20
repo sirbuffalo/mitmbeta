@@ -1,7 +1,7 @@
 :root {
     --top-bar-color: #08625f;
     --top-bar-text-color: #ffffff;
-    --course_bar-color: #2bcf5c;
+    --course_bar-color: #17755c;
     --course_bar-text-color: #ffffff;
     --site-font: "Montserrat", sans-serif;
     --video-title-bar-height: 46px;
@@ -203,7 +203,7 @@ body {
 
 .video-node {
     background: #ffffff;
-    border: 2px solid #1281a0;
+    border: 2px solid #6cc1c7;
     border-radius: 8px;
     min-width: 220px;
     padding: 14px;
@@ -443,7 +443,7 @@ body {
 }
 
 .video-pause-continue {
-    background: #2bcf4f;
+    background: #086744;
     border: 0;
     color: #ffffff;
     cursor: pointer;
@@ -625,32 +625,32 @@ body {
 }
 
 .video-interjection-marker[data-depth="1"] {
-    background: #ff1f1f;
+    background: #ff7575;
     bottom: 0;
 }
 
 .video-interjection-marker[data-depth="2"] {
-    background: #ff9f1f;
+    background: #ffb656;
     bottom: 8px;
 }
 
 .video-interjection-marker[data-depth="3"] {
-    background: #ffd21f;
+    background: #ffde5a;
     bottom: 16px;
 }
 
 .video-interjection-marker[data-depth="4"] {
-    background: #2bcf4f;
+    background: #86ffbc;
     bottom: 24px;
 }
 
 .video-interjection-marker[data-depth="5"] {
-    background: #2f80ff;
+    background: #9adbff;
     bottom: 32px;
 }
 
 .video-interjection-marker[data-depth="6"] {
-    background: #8b5cff;
+    background: #cca3ff;
     bottom: 40px;
 }
 
