@@ -47,7 +47,15 @@
                 );
 
                 line.setAttribute('class', 'video-tree-line');
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('fill', 'none');
+                line.setAttribute('stroke', 'black');
                 lines.append(line);
+
+
+
+                
+                
             });
         });
     }
